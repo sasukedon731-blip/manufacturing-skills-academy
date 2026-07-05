@@ -152,13 +152,8 @@ if (devUnlockAll) {
     needUpdate = true
   }
 
-  // billing が無ければ作る / 既にあれば currentPlan だけ同期（status/method は保持）
-  if (!data?.billing) {
-    ensureBilling()
-  } else if (data?.billing?.currentPlan !== plan) {
-    patch.billing = { ...data.billing, currentPlan: plan }
-    needUpdate = true
-  }
+// billing はKOMOJU/API側だけが更新する。
+// クライアント側では作成・変更しない。
 
   if (JSON.stringify(rawSelected) !== JSON.stringify(selected)) {
     patch.selectedQuizTypes = selected
