@@ -64,8 +64,7 @@ const QUIZ_TYPES = quizCatalog
 function label(t?: string) {
   if (t === "japanese-n4") return "N4"
   if (t === "genba-listening") return "現場リスニング"
-  if (t === "gaikoku-license") return "外国免許"
-  return "-"
+    return "-"
 }
 
 function formatDateSeconds(seconds?: number) {

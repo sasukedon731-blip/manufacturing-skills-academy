@@ -36,9 +36,7 @@ function isQuizType(v: any): v is QuizType {
     v === "japanese-n4" ||
     v === "japanese-n3" ||
     v === "japanese-n2" ||
-    v === "gaikoku-license" ||
-    v === "genba-listening" ||
-    v === "road-signs"
+    v === "genba-listening"
   )
 }
 
