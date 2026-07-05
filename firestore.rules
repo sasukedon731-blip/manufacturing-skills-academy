@@ -59,11 +59,17 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny([
           "billing",
           "accountType",
-          "companyCode",
           "companyName",
           "companyId",
           "devUnlockAll"
-        ]);
+        ])
+        && (
+          !request.resource.data.keys().hasAny(["companyCode"])
+          || (
+            request.resource.data.companyCode is string
+            && request.resource.data.companyCode.matches("^[A-Z0-9_-]{2,32}$")
+          )
+        );
     }
 
     function safeUserUpdate() {

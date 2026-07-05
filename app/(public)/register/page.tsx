@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { FirebaseError } from "firebase/app"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useRouter } from "next/navigation"
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [companyCode, setCompanyCode] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -38,6 +40,7 @@ export default function RegisterPage() {
     }
 
     try {
+      const normalizedCompanyCode = companyCode.trim().toUpperCase()
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
 
       await updateProfile(userCredential.user, { displayName: username })
@@ -57,6 +60,7 @@ export default function RegisterPage() {
         email: userCredential.user.email ?? email,
         displayName: username,
         role: "user",
+        ...(normalizedCompanyCode ? { companyCode: normalizedCompanyCode } : {}),
 
         // ---- プラン運用 ----
         plan,
@@ -71,9 +75,9 @@ export default function RegisterPage() {
       })
 
       router.push("/") // or /select-mode でもOK
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      const code = err?.code ?? ""
+      const code = err instanceof FirebaseError ? err.code : ""
       if (code === "auth/email-already-in-use") setError("このメールアドレスは既に登録されています")
       else if (code === "auth/invalid-email") setError("メールアドレスの形式が正しくありません")
       else if (code === "auth/weak-password") setError("パスワードが弱すぎます（6文字以上）")
@@ -108,6 +112,14 @@ export default function RegisterPage() {
         placeholder="パスワード（6文字以上）"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+
+      <input
+        type="text"
+        placeholder="企業コード（任意）"
+        value={companyCode}
+        onChange={(e) => setCompanyCode(e.target.value)}
         style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
       />
 
