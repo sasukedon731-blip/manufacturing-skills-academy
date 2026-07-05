@@ -59,7 +59,6 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny([
           "billing",
           "accountType",
-          "companyName",
           "companyId",
           "devUnlockAll"
         ])
@@ -69,6 +68,11 @@ service cloud.firestore {
             request.resource.data.companyCode is string
             && request.resource.data.companyCode.matches("^[A-Z0-9_-]{2,32}$")
           )
+        )
+        && (
+          !request.resource.data.keys().hasAny(["companyName"])
+          || request.resource.data.companyName == null
+          || request.resource.data.companyName is string
         );
     }
 
@@ -112,7 +116,7 @@ service cloud.firestore {
     }
 
     match /companies/{companyCode} {
-      allow read: if signedIn();
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 

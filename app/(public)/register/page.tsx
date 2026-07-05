@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { FirebaseError } from "firebase/app"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc, serverTimestamp } from "firebase/firestore"
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 
 import { auth, db } from "@/app/lib/firebase"
@@ -23,12 +23,16 @@ export default function RegisterPage() {
     setError("")
     setLoading(true)
 
-    if (!username) {
+    const trimmedName = username.trim()
+    const trimmedEmail = email.trim()
+    const normalizedCompanyCode = companyCode.trim().toUpperCase()
+
+    if (!trimmedName) {
       setError("ユーザーネームを入力してください")
       setLoading(false)
       return
     }
-    if (!email) {
+    if (!trimmedEmail) {
       setError("メールアドレスを入力してください")
       setLoading(false)
       return
@@ -40,10 +44,30 @@ export default function RegisterPage() {
     }
 
     try {
-      const normalizedCompanyCode = companyCode.trim().toUpperCase()
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      let companyName: string | null = null
 
-      await updateProfile(userCredential.user, { displayName: username })
+      if (normalizedCompanyCode) {
+        const companySnap = await getDoc(doc(db, "companies", normalizedCompanyCode))
+
+        if (!companySnap.exists()) {
+          setError("企業コードが正しくありません")
+          setLoading(false)
+          return
+        }
+
+        const companyData = companySnap.data()
+        if (companyData?.status && companyData.status !== "active") {
+          setError("この企業コードは現在利用できません")
+          setLoading(false)
+          return
+        }
+
+        companyName = companyData?.name ?? companyData?.companyName ?? null
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password)
+
+      await updateProfile(userCredential.user, { displayName: trimmedName })
 
       const uid = userCredential.user.uid
 
@@ -57,10 +81,12 @@ export default function RegisterPage() {
       const selectedQuizTypes = normalizeSelectedForPlan([], entitledQuizTypes, plan)
 
       await setDoc(doc(db, "users", uid), {
-        email: userCredential.user.email ?? email,
-        displayName: username,
+        uid,
+        email: userCredential.user.email ?? trimmedEmail,
+        displayName: trimmedName,
         role: "user",
-        ...(normalizedCompanyCode ? { companyCode: normalizedCompanyCode } : {}),
+        companyCode: normalizedCompanyCode || null,
+        companyName,
 
         // ---- プラン運用 ----
         plan,
@@ -88,64 +114,77 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto", textAlign: "center" }}>
-      <h1>新規登録</h1>
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      <section className="card" style={{ width: "100%", maxWidth: 440 }}>
+        <div className="card-header" style={{ textAlign: "center" }}>
+          <p className="badge" style={{ marginBottom: 10 }}>CREATE ACCOUNT</p>
+          <h1 className="card-title">新規登録</h1>
+          <p className="card-subtitle" style={{ lineHeight: 1.8 }}>
+            個人利用の方は企業コードを空欄のまま登録できます。
+            企業から案内された方は企業コードを入力してください。
+          </p>
+        </div>
 
-      <input
-        type="text"
-        placeholder="ユーザーネーム"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+        <div className="card-body stack">
+          <input
+            type="text"
+            placeholder="ユーザーネーム"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
 
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-      <input
-        type="password"
-        placeholder="パスワード（6文字以上）"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+          <input
+            type="password"
+            placeholder="パスワード（6文字以上）"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-      <input
-        type="text"
-        placeholder="企業コード（任意）"
-        value={companyCode}
-        onChange={(e) => setCompanyCode(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+          <div>
+            <label
+              htmlFor="companyCode"
+              style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 900 }}
+            >
+              企業コード（任意）
+            </label>
+            <input
+              id="companyCode"
+              type="text"
+              placeholder="例：COMPANY001"
+              value={companyCode}
+              onChange={(e) => setCompanyCode(e.target.value)}
+              autoComplete="organization"
+            />
+            <p className="note">
+              企業コードを入力すると、企業管理画面の学習者一覧に紐づきます。
+            </p>
+          </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && <div className="noticeNg">{error}</div>}
 
-      <button
-        onClick={handleRegister}
-        disabled={loading}
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: "#4caf50",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          fontWeight: "bold",
-        }}
-      >
-        {loading ? "登録中..." : "新規登録（お試し開始）"}
-      </button>
+          <button
+            className="btn btnSuccess"
+            onClick={handleRegister}
+            disabled={loading}
+          >
+            {loading ? "登録中..." : "新規登録"}
+          </button>
 
-      <p style={{ marginTop: "15px" }}>
-        すでにアカウントをお持ちですか？
-        <br />
-        <a href="/login">ログインはこちら</a>
-      </p>
-    </div>
+          <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 14, fontWeight: 700 }}>
+            <p>すでにアカウントをお持ちですか？</p>
+            <a href="/login" style={{ color: "#2563eb", fontWeight: 900, textDecoration: "underline" }}>
+              ログインはこちら
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }
