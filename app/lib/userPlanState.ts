@@ -124,21 +124,7 @@ if (devUnlockAll) {
   let needUpdate = false
 
 
-  // ✅ billing（コンビニ決済前提）の後方互換追加
-  // - 既存ユーザーは billing が無くても動くが、以後の拡張のために default を付与しておく
-  const currentBilling = data?.billing ?? null
-  const ensureBilling = () => {
-    if (currentBilling) return
-    patch.billing = {
-      accountType: "personal",
-      method: "convenience",
-      status: "active", // 決済未実装の現段階では既存ユーザーを active 扱い（後で pending/active に切替）
-      currentPlan: plan,
-      currentPeriodEnd: null,
-      aiConversationEnabled: false,
-    }
-    needUpdate = true
-  }
+  // billing はKOMOJU/API側だけが更新する。クライアント側では作成・変更しない。
 
   if (data?.schemaVersion !== 3) {
     patch.schemaVersion = 3
@@ -152,8 +138,7 @@ if (devUnlockAll) {
     needUpdate = true
   }
 
-// billing はKOMOJU/API側だけが更新する。
-// クライアント側では作成・変更しない。
+  // billing/currentPlan はサーバー側（KOMOJU/API）だけが更新する。
 
   if (JSON.stringify(rawSelected) !== JSON.stringify(selected)) {
     patch.selectedQuizTypes = selected

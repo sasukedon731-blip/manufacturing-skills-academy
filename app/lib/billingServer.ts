@@ -13,9 +13,6 @@ export type BillingPatch = Partial<{
   status: BillingStatus
   currentPlan: PlanId
   currentPeriodEnd: any
-  stripeCustomerId: string | null
-  stripeCheckoutSessionId: string | null
-  stripePaymentIntentId: string | null
   komojuSessionId: string | null
   komojuPaymentId: string | null
   komojuOrderId: string | null

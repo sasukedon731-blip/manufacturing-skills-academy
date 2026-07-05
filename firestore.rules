@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function myUserDoc() {
+      return userDoc(request.auth.uid);
+    }
+
+    function myRole() {
+      return signedIn() && myUserDoc().data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && myRole() == "admin";
+    }
+
+    function isCompanyAdmin() {
+      return signedIn() && myRole() == "company_admin";
+    }
+
+    function myCompanyCode() {
+      return signedIn() && myUserDoc().data.companyCode;
+    }
+
+    function isSameCompanyUser(uid) {
+      return signedIn()
+        && userDoc(uid).data.companyCode != null
+        && userDoc(uid).data.companyCode == myCompanyCode();
+    }
+
+    function protectedUserFields() {
+      return [
+        "role",
+        "billing",
+        "accountType",
+        "companyCode",
+        "companyName",
+        "companyId",
+        "devUnlockAll"
+      ];
+    }
+
+    function safeUserCreate(uid) {
+      return isSelf(uid)
+        && (!request.resource.data.keys().hasAny(["role"]) || request.resource.data.role == "user")
+        && !request.resource.data.keys().hasAny([
+          "billing",
+          "accountType",
+          "companyCode",
+          "companyName",
+          "companyId",
+          "devUnlockAll"
+        ]);
+    }
+
+    function safeUserUpdate() {
+      return !request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasAny(protectedUserFields());
+    }
+
+    match /users/{uid} {
+      allow create: if safeUserCreate(uid);
+      allow read: if isSelf(uid) || isAdmin() || (isCompanyAdmin() && isSameCompanyUser(uid));
+      allow update: if isAdmin() || (isSelf(uid) && safeUserUpdate());
+      allow delete: if isAdmin();
+
+      match /{subCollection}/{docId} {
+        allow read: if isSelf(uid) || isAdmin() || (isCompanyAdmin() && isSameCompanyUser(uid));
+        allow create, update, delete: if isSelf(uid) || isAdmin();
+      }
+    }
+
+    match /gameQuestions/{questionId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /attackLeaderboards/{gameId}/entries/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isSelf(uid);
+      allow delete: if isAdmin();
+    }
+
+    match /attackLeaderboard/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isSelf(uid);
+      allow delete: if isAdmin();
+    }
+
+    match /paymentOrders/{orderId} {
+      allow read, write: if false;
+    }
+
+    match /companies/{companyCode} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

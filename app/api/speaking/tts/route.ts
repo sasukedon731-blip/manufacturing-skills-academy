@@ -2,9 +2,11 @@
 
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not set")
+  return new OpenAI({ apiKey })
+}
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +19,8 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
+
+    const openai = getOpenAI()
 
     const mp3 = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",

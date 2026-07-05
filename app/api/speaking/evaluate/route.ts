@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not set")
+  return new OpenAI({ apiKey })
+}
 
 type EvalJson = {
   overallResult: string
@@ -100,6 +102,8 @@ ${targetText}
 学習者の発話文字起こし:
 ${spokenTranscript}
 `.trim()
+
+    const client = getOpenAI()
 
     const response = await client.responses.create({
       model: "gpt-4.1-mini",

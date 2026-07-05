@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Manufacturing Skills Academy
 
-## Getting Started
+製造業向けの日本語・現場用語・ゲーム学習・AI会話/AIスピーキング学習アプリです。
 
-First, run the development server:
+## 今回の販売前整理内容
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- アプリ名/ブランドを `Manufacturing Skills Academy` に統一
+- 製造版Firebase設定を `app/lib/firebase.ts` に固定
+- Stripe APIルートと依存関係を削除し、KOMOJU決済へ一本化
+- クライアント側から `billing` を作成・更新しないよう修正
+- OpenAIクライアントをAPI実行時に初期化する形へ変更
+- Firestoreルール案を `firestore.rules` に追加
+- PWAアイコン/manifest/metadataを製造版向けに整理
+
+## Vercel Environment Variables
+
+本番運用では、Vercelに次を登録してください。
+
+```env
+OPENAI_API_KEY=OpenAIのAPIキー
+FIREBASE_SERVICE_ACCOUNT_KEY=Firebase Admin SDKのサービスアカウントJSON
+KOMOJU_SECRET_KEY=KOMOJUのシークレットキー
+KOMOJU_WEBHOOK_SECRET=KOMOJUのWebhookシークレット
+NEXT_PUBLIC_APP_URL=https://本番URL
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Firebase Web APIキーは `app/lib/firebase.ts` に固定済みなので、`NEXT_PUBLIC_FIREBASE_API_KEY` は不要です。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Firestore Rules
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Firebase Console > Firestore Database > ルール に `firestore.rules` の内容を貼り付けて公開してください。
 
-## Learn More
+## ローカル起動
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## デプロイ後の確認順
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. 画面表示
+2. 新規登録
+3. `users/{uid}` の作成確認
+4. ログイン/ログアウト
+5. 学習履歴保存
+6. ゲーム保存
+7. AI会話/AIスピーキング
+8. KOMOJU決済ページ作成
+9. KOMOJU Webhookで `billing.status=active` になるか確認
+10. 企業コード登録/企業管理画面

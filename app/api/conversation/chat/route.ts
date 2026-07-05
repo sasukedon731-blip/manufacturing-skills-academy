@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not set")
+  return new OpenAI({ apiKey })
+}
 
 type ConversationMessage = {
   role: "ai" | "user" | "system" | "assistant"
@@ -200,6 +202,8 @@ export async function POST(req: Request) {
     if (!userText) {
       return NextResponse.json({ error: "userText is required" }, { status: 400 })
     }
+
+    const openai = getOpenAI()
 
     const safeHistory: ConversationMessage[] = history
       .map((m: any): ConversationMessage => ({

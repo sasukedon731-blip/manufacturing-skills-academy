@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not set")
+  return new OpenAI({ apiKey })
+}
 
 function themeLabel(theme: string) {
   switch (theme) {
@@ -70,6 +72,8 @@ export async function POST(req: Request) {
 - 箇条書きにしない
 - 会話文だけ返す
 `
+
+    const openai = getOpenAI()
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
