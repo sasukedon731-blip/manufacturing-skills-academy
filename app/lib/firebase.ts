@@ -2,16 +2,8 @@ import { initializeApp, getApps, getApp } from "firebase/app"
 import { getAuth } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
-const requiredEnv = (key: string) => {
-  const value = process.env[key]
-  if (!value) {
-    throw new Error(`Missing environment variable: ${key}`)
-  }
-  return value
-}
-
 const firebaseConfig = {
-  apiKey: requiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
+  apiKey: "AIzaSyC6-tmM2fR1nEUYzQW3w-5So7eLmKmqyZI",
   authDomain: "manufacturing-skills-academy.firebaseapp.com",
   projectId: "manufacturing-skills-academy",
   storageBucket: "manufacturing-skills-academy.firebasestorage.app",
