@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { FirebaseError } from "firebase/app"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/app/lib/firebase"
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+import { auth, db } from "@/app/lib/firebase"
 import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
@@ -10,6 +12,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [companyCode, setCompanyCode] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -18,60 +21,115 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const trimmedCompanyCode = companyCode.trim().toUpperCase()
+      let companyName: string | null = null
+
+      if (trimmedCompanyCode) {
+        const companySnap = await getDoc(doc(db, "companies", trimmedCompanyCode))
+
+        if (!companySnap.exists()) {
+          setError("企業コードが正しくありません")
+          setLoading(false)
+          return
+        }
+
+        const companyData = companySnap.data()
+        if (companyData?.status && companyData.status !== "active") {
+          setError("この企業コードは現在利用できません")
+          setLoading(false)
+          return
+        }
+
+        companyName = companyData?.name ?? companyData?.companyName ?? null
+      }
+
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password)
+
+      if (trimmedCompanyCode) {
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          companyCode: trimmedCompanyCode,
+          companyName,
+          updatedAt: serverTimestamp(),
+        }, { merge: true })
+      }
+
       router.push("/") // ログイン成功 → TOP
-    } catch (err) {
-      setError("メールアドレスまたはパスワードが違います")
+    } catch (err: unknown) {
+      const code = err instanceof FirebaseError ? err.code : ""
+      if (code === "permission-denied") {
+        setError("企業コードの紐づけ権限がありません。Firestoreルールを確認してください")
+      } else {
+        setError("メールアドレスまたはパスワードが違います")
+      }
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto", textAlign: "center" }}>
-      <h1>ログイン</h1>
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+      <section className="card" style={{ width: "100%", maxWidth: 440 }}>
+        <div className="card-header" style={{ textAlign: "center" }}>
+          <p className="badge" style={{ marginBottom: 10 }}>LOGIN</p>
+          <h1 className="card-title">ログイン</h1>
+          <p className="card-subtitle" style={{ lineHeight: 1.8 }}>
+            企業から案内された方は、企業コードを入力してログインすると企業管理画面に紐づきます。
+          </p>
+        </div>
 
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+        <div className="card-body stack">
+          <input
+            type="email"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
 
-      <input
-        type="password"
-        placeholder="パスワード"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-      />
+          <input
+            type="password"
+            placeholder="パスワード"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+          <div>
+            <label
+              htmlFor="loginCompanyCode"
+              style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 900 }}
+            >
+              企業コード（任意）
+            </label>
+            <input
+              id="loginCompanyCode"
+              type="text"
+              placeholder="例：COMPANY001"
+              value={companyCode}
+              onChange={(e) => setCompanyCode(e.target.value)}
+              autoComplete="organization"
+            />
+            <p className="note">
+              個人利用の方は空欄のままログインできます。
+            </p>
+          </div>
 
-      <button
-        onClick={handleLogin}
-        disabled={loading}
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: "#2196f3",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          fontWeight: "bold",
-          cursor: "pointer",
-        }}
-      >
-        {loading ? "ログイン中..." : "ログイン"}
-      </button>
+          {error && <div className="noticeNg">{error}</div>}
 
-      {/* 👇 ここが「新規登録はこちら」 */}
-      <p style={{ marginTop: "15px" }}>
-        アカウントをお持ちでない方は
-        <br />
-        <a href="/register">新規登録はこちら</a>
-      </p>
-    </div>
+          <button
+            className="btn btnPrimary"
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? "ログイン中..." : "ログイン"}
+          </button>
+
+          <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 14, fontWeight: 700 }}>
+            <p>アカウントをお持ちでない方は</p>
+            <a href="/register" style={{ color: "#2563eb", fontWeight: 900, textDecoration: "underline" }}>
+              新規登録はこちら
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }

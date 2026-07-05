@@ -46,11 +46,33 @@ service cloud.firestore {
         "role",
         "billing",
         "accountType",
-        "companyCode",
-        "companyName",
         "companyId",
         "devUnlockAll"
       ];
+    }
+
+    function companyDoc(companyCode) {
+      return get(/databases/$(database)/documents/companies/$(companyCode));
+    }
+
+    function validCompanyCodeValue() {
+      return !request.resource.data.keys().hasAny(["companyCode"])
+        || request.resource.data.companyCode == null
+        || (
+          request.resource.data.companyCode is string
+          && request.resource.data.companyCode.matches("^[A-Z0-9_-]{2,32}$")
+          && exists(/databases/$(database)/documents/companies/$(request.resource.data.companyCode))
+          && (
+            !companyDoc(request.resource.data.companyCode).data.keys().hasAny(["status"])
+            || companyDoc(request.resource.data.companyCode).data.status == "active"
+          )
+        );
+    }
+
+    function validCompanyNameValue() {
+      return !request.resource.data.keys().hasAny(["companyName"])
+        || request.resource.data.companyName == null
+        || request.resource.data.companyName is string;
     }
 
     function safeUserCreate(uid) {
@@ -62,24 +84,14 @@ service cloud.firestore {
           "companyId",
           "devUnlockAll"
         ])
-        && (
-          !request.resource.data.keys().hasAny(["companyCode"])
-          || (
-            request.resource.data.companyCode is string
-            && request.resource.data.companyCode.matches("^[A-Z0-9_-]{2,32}$")
-          )
-        )
-        && (
-          !request.resource.data.keys().hasAny(["companyName"])
-          || request.resource.data.companyName == null
-          || request.resource.data.companyName is string
-        );
+        && validCompanyCodeValue()
+        && validCompanyNameValue();
     }
 
     function safeUserUpdate() {
-      return !request.resource.data.diff(resource.data)
-        .affectedKeys()
-        .hasAny(protectedUserFields());
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedUserFields())
+        && validCompanyCodeValue()
+        && validCompanyNameValue();
     }
 
     match /users/{uid} {
