@@ -106,6 +106,12 @@ service cloud.firestore {
       }
     }
 
+    match /companies/{companyCode} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
     match /gameQuestions/{questionId} {
       allow read: if signedIn();
       allow write: if isAdmin();
@@ -125,11 +131,6 @@ service cloud.firestore {
 
     match /paymentOrders/{orderId} {
       allow read, write: if false;
-    }
-
-    match /companies/{companyCode} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
     }
 
     match /{document=**} {

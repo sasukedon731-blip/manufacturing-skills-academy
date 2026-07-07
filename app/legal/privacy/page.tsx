@@ -58,7 +58,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="9. お問い合わせ窓口">
-          info@outin-plus.com
+          support@outin-plus.com
         </Section>
 
         <Section title="10. 改定">

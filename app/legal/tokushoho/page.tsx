@@ -10,20 +10,20 @@ export default function TokushohoPage() {
       <article style={styles.card}>
         <h1 style={styles.title}>特定商取引法に基づく表記</h1>
 
-        <InfoRow label="販売事業者" value="高橋健仁" />
-        <InfoRow label="運営責任者" value="高橋健仁" />
+        <InfoRow label="販売事業者" value="株式会社アウトインプラス" />
+        <InfoRow label="運営責任者" value="高野 倫之" />
         <InfoRow
           label="所在地"
           value="〒150-0043 東京都渋谷区道玄坂1-10-8 渋谷道玄坂東急ビル2F-C"
         />
         <InfoRow
           label="電話番号"
-          value={`090-7616-0777
+          value={`03-6820-3675
 ※電話でのお問い合わせには対応しておりません。
-お問い合わせはメール（info@outin-plus.com）までお願いいたします。`}
+お問い合わせはメール（support@outin-plus.com）までお願いいたします。`}
         />
-        <InfoRow label="メールアドレス" value="info@outin-plus.com" />
-        <InfoRow label="販売URL" value="https://quiz-app-mu-ochre-76.vercel.app/" />
+        <InfoRow label="メールアドレス" value="support@outin-plus.com" />
+        <InfoRow label="販売URL" value="https://manufacturing-skills-academy.vercel.app/" />
 
         <SectionTitle>販売価格</SectionTitle>
         <p style={styles.text}>

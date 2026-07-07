@@ -3,8 +3,9 @@
 
 import { db } from "@/app/lib/firebase"
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+import { buildEntitledQuizTypes, normalizeSelectedForPlan, type PlanId } from "@/app/lib/plan"
 
-export type UserRole = "admin" | "user"
+export type UserRole = "admin" | "company_admin" | "user"
 
 type EnsureParams = {
   uid: string
@@ -13,10 +14,10 @@ type EnsureParams = {
 }
 
 /**
- * ✅ users/{uid} を必ず「実在するドキュメント」として作る/補正する
- * - 初回：role/user を含めて作成（空ドキュメント問題を根絶）
- * - 既存：roleは触らず、email/displayName/updatedAt を安全に merge
- * - ⚠️ 既存ユーザーの selectedQuizTypes を絶対に上書きしない
+ * users/{uid} を必ず実在するドキュメントとして作る/補正する。
+ * - 初回作成は無料体験（trial）で統一
+ * - billing / accountType / companyCode はクライアント側で勝手に作らない
+ * - 旧 quizLimit は再作成しない
  */
 export async function ensureUserProfile(params: EnsureParams) {
   const { uid } = params
@@ -27,16 +28,18 @@ export async function ensureUserProfile(params: EnsureParams) {
   const snap = await getDoc(ref)
 
   if (!snap.exists()) {
+    const plan: PlanId = "trial"
+    const entitledQuizTypes = buildEntitledQuizTypes(plan)
+    const selectedQuizTypes = normalizeSelectedForPlan([], entitledQuizTypes, plan)
+
     await setDoc(ref, {
       uid,
       email,
       displayName,
       role: "user" as UserRole,
-
-      // 初回だけ初期値
-      quizLimit: 3,
-      selectedQuizTypes: [],
-
+      plan,
+      selectedQuizTypes,
+      schemaVersion: 3,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -45,9 +48,6 @@ export async function ensureUserProfile(params: EnsureParams) {
 
   const data = snap.data() as any
 
-  // ✅ 既存：roleは変更しない（事故防止）
-  // ✅ email/displayName は未設定なら補完してOK
-  // ✅ quizLimit/selectedQuizTypes は「無いときだけ」補完（上書き禁止）
   const patch: Record<string, any> = {
     uid,
     updatedAt: serverTimestamp(),
@@ -55,20 +55,21 @@ export async function ensureUserProfile(params: EnsureParams) {
 
   if (email && !data?.email) patch.email = email
   if (displayName && !data?.displayName) patch.displayName = displayName
-
-  if (typeof data?.quizLimit !== "number") patch.quizLimit = 3
-  if (!Array.isArray(data?.selectedQuizTypes)) patch.selectedQuizTypes = []
+  if (!data?.plan) patch.plan = "trial"
+  if (!Array.isArray(data?.selectedQuizTypes)) {
+    const plan: PlanId = data?.plan === "3" || data?.plan === "5" || data?.plan === "7" ? data.plan : "trial"
+    const entitledQuizTypes = buildEntitledQuizTypes(plan)
+    patch.selectedQuizTypes = normalizeSelectedForPlan([], entitledQuizTypes, plan)
+  }
+  if (data?.schemaVersion !== 3) patch.schemaVersion = 3
 
   await setDoc(ref, patch, { merge: true })
 }
 
-/**
- * ✅ 自分のrole取得（存在しない場合は user 扱い）
- */
 export async function getUserRole(uid: string): Promise<UserRole> {
   const ref = doc(db, "users", uid)
   const snap = await getDoc(ref)
   if (!snap.exists()) return "user"
   const role = (snap.data() as any)?.role
-  return role === "admin" ? "admin" : "user"
+  return role === "admin" || role === "company_admin" ? role : "user"
 }

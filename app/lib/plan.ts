@@ -43,27 +43,58 @@ export type BillingStatus = "pending" | "active" | "past_due" | "canceled"
 export type BillingMethod = "convenience" | "card" | "bank_transfer"
 export type AccountType = "personal" | "company"
 
+function toDate(value: any): Date | null {
+  if (!value) return null
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  if (typeof value?.toDate === "function") {
+    const d = value.toDate()
+    return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null
+  }
+  if (typeof value?.seconds === "number") return new Date(value.seconds * 1000)
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function isWithinFreeTrial(userDoc: any): boolean {
+  const createdAt = toDate(userDoc?.createdAt)
+  if (!createdAt) return false
+  const oneDayMs = 24 * 60 * 60 * 1000
+  return Date.now() - createdAt.getTime() <= oneDayMs
+}
+
 export function getBillingStatus(userDoc: any): BillingStatus {
   const s = userDoc?.billing?.status
   if (s === "pending" || s === "active" || s === "past_due" || s === "canceled") return s
-  return "active"
+
+  // 企業コードユーザーと1日無料体験中ユーザーは画面上 active 扱い
+  if (userDoc?.companyCode) return "active"
+  if ((userDoc?.plan ?? "trial") === "trial" && isWithinFreeTrial(userDoc)) return "active"
+
+  return "canceled"
 }
 
 export function isAccessActive(userDoc: any): boolean {
-  if (getBillingStatus(userDoc) !== "active") return false
+  if (!userDoc) return false
 
-  const end = userDoc?.billing?.currentPeriodEnd
-  if (!end) return true
+  // 企業コード登録ユーザーは企業契約扱い
+  if (userDoc.companyCode) return true
 
-  try {
-    const endDate = typeof end?.toDate === "function" ? end.toDate() : new Date(end)
-    return endDate.getTime() > Date.now()
-  } catch {
-    return false
+  const billing = userDoc.billing
+  if (billing?.status === "active") {
+    const endDate = toDate(billing.currentPeriodEnd)
+    return !!endDate && endDate.getTime() > Date.now()
   }
+
+  // billing がまだ無い個人ユーザーは1日だけ無料体験
+  if (!billing && (userDoc.plan ?? "trial") === "trial") {
+    return isWithinFreeTrial(userDoc)
+  }
+
+  return false
 }
 
 export function getEffectivePlanId(userDoc: any): PlanId {
+  if (userDoc?.companyCode) return "7"
   const p = userDoc?.billing?.currentPlan ?? userDoc?.plan
   return p === "trial" || p === "free" || p === "3" || p === "5" || p === "7"
     ? p
