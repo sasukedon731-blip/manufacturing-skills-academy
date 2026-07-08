@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { FirebaseError } from "firebase/app"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+import { Timestamp, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 import { useRouter } from "next/navigation"
 
 import { auth, db } from "@/app/lib/firebase"
@@ -71,7 +71,7 @@ export default function RegisterPage() {
 
       const uid = userCredential.user.uid
 
-      // ✅ 初期プラン（おすすめ：trial）
+      // ✅ 初期プラン（1日無料体験）
       const plan: PlanId = "trial"
 
       // ✅ planから entitlement を自動生成
@@ -80,21 +80,28 @@ export default function RegisterPage() {
       // ✅ selected も安全に正規化（基本は entitlement と同じでOK）
       const selectedQuizTypes = normalizeSelectedForPlan([], entitledQuizTypes, plan)
 
+      const now = new Date()
+      const trialEndsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+      const accountType = normalizedCompanyCode ? "company" : "personal"
+
       await setDoc(doc(db, "users", uid), {
         uid,
         email: userCredential.user.email ?? trimmedEmail,
         displayName: trimmedName,
         role: "user",
+        accountType,
         companyCode: normalizedCompanyCode || null,
         companyName,
 
         // ---- プラン運用 ----
         plan,
+        trialStartedAt: Timestamp.fromDate(now),
+        trialEndsAt: normalizedCompanyCode ? null : Timestamp.fromDate(trialEndsAt),
         entitledQuizTypes,
         selectedQuizTypes,
 
-        // 初回はすぐ変更できる扱い（select-quizzesで制御）
-        nextChangeAllowedAt: serverTimestamp(),
+        // 初期状態は全教材を選択済みにする。ロックは教材画面で変更した時だけ開始。
+        nextChangeAllowedAt: null,
 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),

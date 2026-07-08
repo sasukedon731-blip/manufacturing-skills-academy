@@ -254,6 +254,16 @@ export async function savePlanAndNormalizeSelected(params: {
     {
       plan: params.plan,
       schemaVersion: 3,
+      billing: data?.billing
+        ? { ...data.billing, currentPlan: params.plan }
+        : {
+            accountType: "personal",
+            method: "convenience",
+            status: "active",
+            currentPlan: params.plan,
+            currentPeriodEnd: null,
+            aiConversationEnabled: false,
+          },
       selectedQuizTypes: selected,
       entitledQuizTypes: deleteField(),
       quizLimit: deleteField(),

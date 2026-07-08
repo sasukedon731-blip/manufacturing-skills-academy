@@ -1,51 +1,28 @@
 # Manufacturing Skills Academy
 
-製造業向けの日本語・現場用語・ゲーム学習・AI会話/AIスピーキング学習アプリです。
+製造現場向けの日本語・AI学習アプリです。
 
-## 今回の販売前整理内容
+## 今回の修正
 
-- アプリ名/ブランドを `Manufacturing Skills Academy` に統一
-- 製造版Firebase設定を `app/lib/firebase.ts` に固定
-- Stripe APIルートと依存関係を削除し、KOMOJU決済へ一本化
-- クライアント側から `billing` を作成・更新しないよう修正
-- OpenAIクライアントをAPI実行時に初期化する形へ変更
-- Firestoreルール案を `firestore.rules` に追加
-- PWAアイコン/manifest/metadataを製造版向けに整理
+- 無料体験中にN4だけへ固定される問題を修正
+- trial/freeでも製造教材を含む全教材が選択・利用できるよう修正
+- 既存ユーザーの selectedQuizTypes がN4だけの場合も自動修復で全教材へ更新
+- 新規登録時に accountType / trialStartedAt / trialEndsAt を作成
+- 企業コード登録ユーザーは company 扱い
+- 教材一覧とモード選択画面を製造アプリ向けにデザイン改善
+- TOP画面を Manufacturing Skills Academy 用にデザイン改善
+- 通常学習画面の進捗・問題・選択肢・解説の見やすさを改善
+- Firestore rules を accountType 作成許可・更新保護の形に調整
 
-## Vercel Environment Variables
+## 反映手順
 
-本番運用では、Vercelに次を登録してください。
+1. ZIPを既存フォルダへ上書き
+2. `git add -A`
+3. `git commit -m "Fix manufacturing lesson access and UI"`
+4. `git push`
+5. Firebase Console の Firestore rules に `firestore.rules` を貼って公開
+6. Vercel のデプロイ完了後、新規登録または既存ユーザーで再ログインして確認
 
-```env
-OPENAI_API_KEY=OpenAIのAPIキー
-FIREBASE_SERVICE_ACCOUNT_KEY=Firebase Admin SDKのサービスアカウントJSON
-KOMOJU_SECRET_KEY=KOMOJUのシークレットキー
-KOMOJU_WEBHOOK_SECRET=KOMOJUのWebhookシークレット
-NEXT_PUBLIC_APP_URL=https://本番URL
-```
+## 注意
 
-Firebase Web APIキーは `app/lib/firebase.ts` に固定済みなので、`NEXT_PUBLIC_FIREBASE_API_KEY` は不要です。
-
-## Firestore Rules
-
-Firebase Console > Firestore Database > ルール に `firestore.rules` の内容を貼り付けて公開してください。
-
-## ローカル起動
-
-```bash
-npm install
-npm run dev
-```
-
-## デプロイ後の確認順
-
-1. 画面表示
-2. 新規登録
-3. `users/{uid}` の作成確認
-4. ログイン/ログアウト
-5. 学習履歴保存
-6. ゲーム保存
-7. AI会話/AIスピーキング
-8. KOMOJU決済ページ作成
-9. KOMOJU Webhookで `billing.status=active` になるか確認
-10. 企業コード登録/企業管理画面
+`.env.local` は含めていません。Vercelには `OPENAI_API_KEY` など必要な環境変数を設定してください。

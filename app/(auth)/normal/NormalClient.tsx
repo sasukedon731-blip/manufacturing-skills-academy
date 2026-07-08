@@ -749,11 +749,16 @@ export default function NormalClient({ quiz }: Props) {
         </div>
       )}
 
-      <p>
-        {index + 1} / {questions.length}
-      </p>
-
-      <h2>{current.question}</h2>
+      <div className="studyTop">
+        <div>
+          <div className="kicker">標準問題 ・ {index + 1} / {questions.length}</div>
+          <h2 className="question">{current.question}</h2>
+        </div>
+        <div className="studyScore">正解 {correctCount}</div>
+      </div>
+      <div className="progressTrack" aria-label="進捗">
+        <div className="progressBar" style={{ width: `${Math.round(((index + 1) / questions.length) * 100)}%` }} />
+      </div>
       {/* ✅ 問題画像（従来の signId / imageUrl） */}
       <QuestionImage q={current} mode="auto" />
 
@@ -776,11 +781,12 @@ export default function NormalClient({ quiz }: Props) {
       ) : null}
 
       {isMultiAnswerQuestion(current) && (
-        <div style={{ margin: '8px 0 12px', fontSize: 13, opacity: 0.8 }}>
+        <div className="panelSoft" style={{ margin: '12px 0' }}>
           この問題は <b>{requiredAnswerCount(current)}つ選択</b> です。必要数そろうと自動で判定されます。
         </div>
       )}
 
+      <div className="choiceList">
       {current.choices.map((c, i) => {
         const selectedNow = selected.includes(i)
         const correctIndexes = getCorrectIndexes(current)
@@ -798,6 +804,7 @@ export default function NormalClient({ quiz }: Props) {
           </Button>
         )
       })}
+      </div>
 
       {!showExplanation && (
         <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -808,18 +815,18 @@ export default function NormalClient({ quiz }: Props) {
       )}
 
       {showExplanation && (
-  <div style={{ marginTop: 12 }}>
-    <div style={{ fontWeight: 900, marginBottom: 6 }}>
+  <div className="explainBox">
+    <div className="explainTitle" style={{ color: correct ? '#166534' : '#991b1b' }}>
       {correct ? '✅ 正解！' : '❌ 不正解'}
     </div>
 
-    <div style={{ fontWeight: 700, marginBottom: 8 }}>
+    <div style={{ fontWeight: 800, marginBottom: 8 }}>
       【正解】 {formatCorrectAnswerLabels(current)}
     </div>
 
     <QuestionImage q={current} purpose="explanation" />
 
-    <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+    <div className="explainText">
       {stripLeadingAnswerLabel(current.explanation)}
     </div>
 

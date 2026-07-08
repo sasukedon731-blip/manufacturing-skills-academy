@@ -48,7 +48,7 @@ export default function RefundPage() {
 
         <section style={styles.section}>
           <h2 style={styles.sectionTitle}>5. お問い合わせ</h2>
-          <p style={styles.text}>support@outin-plus.com</p>
+          <p style={styles.text}>info@outin-plus.com</p>
         </section>
 
         <div style={styles.bottomLinks}>

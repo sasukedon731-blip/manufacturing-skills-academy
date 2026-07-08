@@ -708,3 +708,53 @@ body {
   .appHeaderTagline{ display:none; }
   .appHeaderLogo{ width:34px; height:34px; border-radius:12px; }
 }
+
+/* --- Manufacturing learning screen polish --- */
+.studyTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:10px;
+}
+.studyScore{
+  flex:0 0 auto;
+  border:1px solid rgba(37,99,235,.22);
+  background:rgba(37,99,235,.08);
+  color:#1d4ed8;
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:13px;
+  font-weight:900;
+}
+.progressTrack{
+  height:10px;
+  border-radius:999px;
+  background:#e5eef8;
+  overflow:hidden;
+  margin:0 0 16px;
+}
+.progressBar{
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#2563eb,#0f766e);
+}
+.choice{
+  min-height:54px;
+  border-radius:16px;
+  border-color:#d8e2ec;
+  box-shadow:0 5px 14px rgba(15,23,42,.045);
+}
+.choice:hover{
+  background:#f8fbff;
+  border-color:#b7c9dc;
+}
+.explainBox{
+  border-radius:18px;
+  background:linear-gradient(180deg,#ffffff,#f8fafc);
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+@media (max-width:640px){
+  .studyTop{ flex-direction:column; }
+  .studyScore{ align-self:flex-start; }
+}

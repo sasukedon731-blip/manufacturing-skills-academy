@@ -75,21 +75,28 @@ service cloud.firestore {
         || request.resource.data.companyName is string;
     }
 
+    function validAccountTypeValue() {
+      return !request.resource.data.keys().hasAny(["accountType"])
+        || request.resource.data.accountType == "personal"
+        || request.resource.data.accountType == "company";
+    }
+
     function safeUserCreate(uid) {
       return isSelf(uid)
         && (!request.resource.data.keys().hasAny(["role"]) || request.resource.data.role == "user")
         && !request.resource.data.keys().hasAny([
           "billing",
-          "accountType",
           "companyId",
           "devUnlockAll"
         ])
+        && validAccountTypeValue()
         && validCompanyCodeValue()
         && validCompanyNameValue();
     }
 
     function safeUserUpdate() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedUserFields())
+        && validAccountTypeValue()
         && validCompanyCodeValue()
         && validCompanyNameValue();
     }
@@ -104,12 +111,6 @@ service cloud.firestore {
         allow read: if isSelf(uid) || isAdmin() || (isCompanyAdmin() && isSameCompanyUser(uid));
         allow create, update, delete: if isSelf(uid) || isAdmin();
       }
-    }
-
-    match /companies/{companyCode} {
-      allow get: if true;
-      allow list: if false;
-      allow create, update, delete: if isAdmin();
     }
 
     match /gameQuestions/{questionId} {
@@ -131,6 +132,11 @@ service cloud.firestore {
 
     match /paymentOrders/{orderId} {
       allow read, write: if false;
+    }
+
+    match /companies/{companyCode} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
     }
 
     match /{document=**} {
