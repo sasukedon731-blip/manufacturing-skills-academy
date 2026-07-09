@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, type CSSProperties } from "react"
+import { useEffect, useMemo, useState, type CSSProperties } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "firebase/auth"
 
@@ -27,6 +27,7 @@ const featuredQuizIds = [
 export default function HomePage() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const [isNarrow, setIsNarrow] = useState(false)
 
   const quizzes = useMemo(() => {
     const order = new Map(featuredQuizIds.map((id, index) => [id, index]))
@@ -35,18 +36,24 @@ export default function HomePage() {
       .sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999))
   }, [])
 
+  useEffect(() => {
+    const update = () => setIsNarrow(window.innerWidth < 900)
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
+
   return (
     <main style={styles.page}>
       <AppHeader />
 
       <section style={styles.shell}>
-        <div style={styles.hero}>
+        <div style={{ ...styles.hero, ...(isNarrow ? styles.heroNarrow : null) }}>
           <div>
             <p style={styles.kicker}>MANUFACTURING SKILLS ACADEMY</p>
             <h1 style={styles.title}>製造現場で使う日本語を、AIとゲームで身につける</h1>
             <p style={styles.lead}>
-              製造用語、JLPT、リスニング、AI会話、AIスピーキング、日本語バトルをひとつにまとめた学習アプリです。
-              個人学習から企業研修まで、現場で本当に使う日本語を効率よく練習できます。
+              製造用語、JLPT、リスニング、AI会話、AIスピーキング、日本語バトルをまとめて練習できます。
             </p>
 
             <div style={styles.quickActions}>
@@ -100,7 +107,7 @@ export default function HomePage() {
             </div>
             </div>
 
-            <div style={styles.loginCards}>
+            <div style={{ ...styles.loginCards, ...(isNarrow ? styles.loginCardsNarrow : null) }}>
             <EntryCard
               badge="PERSONAL"
               title="個人で学習する"
@@ -208,20 +215,23 @@ const styles: Record<string, CSSProperties> = {
   shell: {
     maxWidth: 1120,
     margin: "0 auto",
-    padding: "34px 18px 48px",
+    padding: "22px 18px 42px",
   },
   hero: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))",
-    gap: 28,
-    alignItems: "center",
+    gridTemplateColumns: "minmax(0, 1fr) minmax(360px, 520px)",
+    gap: 22,
+    alignItems: "start",
+  },
+  heroNarrow: {
+    gridTemplateColumns: "1fr",
   },
   heroRight: {
     display: "grid",
     gap: 16,
   },
   kicker: {
-    margin: "0 0 10px",
+    margin: "0 0 8px",
     fontSize: 12,
     fontWeight: 900,
     color: "#2563eb",
@@ -229,23 +239,23 @@ const styles: Record<string, CSSProperties> = {
   },
   title: {
     margin: 0,
-    maxWidth: 760,
-    fontSize: "clamp(34px, 5vw, 58px)",
-    lineHeight: 1.1,
+    maxWidth: 650,
+    fontSize: "clamp(34px, 4.6vw, 52px)",
+    lineHeight: 1.06,
     letterSpacing: 0,
   },
   lead: {
-    margin: "16px 0 0",
-    maxWidth: 720,
+    margin: "14px 0 0",
+    maxWidth: 620,
     color: "#526174",
     fontSize: 16,
-    lineHeight: 1.8,
+    lineHeight: 1.65,
   },
   quickActions: {
     display: "flex",
     flexWrap: "wrap",
     gap: 10,
-    marginTop: 24,
+    marginTop: 20,
   },
   primaryLink: {
     padding: "13px 17px",
@@ -282,18 +292,18 @@ const styles: Record<string, CSSProperties> = {
     cursor: "pointer",
   },
   heroVisual: {
-    minHeight: 250,
+    minHeight: 210,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
   machineCard: {
-    width: "min(100%, 420px)",
-    minHeight: 250,
+    width: "100%",
+    minHeight: 210,
     position: "relative",
     overflow: "hidden",
-    padding: 22,
-    borderRadius: 24,
+    padding: 18,
+    borderRadius: 20,
     color: "#fff",
     background: "linear-gradient(135deg,#0f4c5c 0%,#155e75 48%,#0f766e 100%)",
     boxShadow: "0 26px 64px rgba(15,76,92,.26)",
@@ -323,21 +333,21 @@ const styles: Record<string, CSSProperties> = {
   gearWrap: {
     position: "relative",
     zIndex: 2,
-    height: 130,
+    height: 94,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
   bigGear: {
-    fontSize: 112,
+    fontSize: 82,
     lineHeight: 1,
     opacity: .94,
     filter: "drop-shadow(0 12px 24px rgba(0,0,0,.24))",
   },
   aiMark: {
     position: "absolute",
-    right: "23%",
-    top: 31,
+    right: "25%",
+    top: 18,
     borderRadius: 14,
     padding: "7px 9px",
     background: "rgba(255,255,255,.95)",
@@ -346,10 +356,10 @@ const styles: Record<string, CSSProperties> = {
   },
   jaMark: {
     position: "absolute",
-    left: "24%",
-    bottom: 22,
-    width: 42,
-    height: 42,
+    left: "26%",
+    bottom: 12,
+    width: 38,
+    height: 38,
     borderRadius: 14,
     display: "grid",
     placeItems: "center",
@@ -362,25 +372,29 @@ const styles: Record<string, CSSProperties> = {
     position: "relative",
     zIndex: 2,
     display: "grid",
-    gap: 8,
+    gap: 6,
   },
   machineText: {
     position: "relative",
     zIndex: 2,
-    margin: "16px 0 0",
+    margin: "14px 0 0",
     color: "rgba(255,255,255,.86)",
-    lineHeight: 1.65,
+    lineHeight: 1.55,
     fontWeight: 800,
   },
   loginCards: {
     display: "grid",
-    gap: 14,
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 12,
+  },
+  loginCardsNarrow: {
+    gridTemplateColumns: "1fr",
   },
   entryCard: {
     position: "relative",
     overflow: "hidden",
-    padding: 22,
-    borderRadius: 18,
+    padding: 18,
+    borderRadius: 16,
     background: "rgba(255,255,255,.94)",
     border: "1px solid #dbe3ef",
     boxShadow: "0 18px 40px rgba(15,23,42,.09)",
@@ -393,37 +407,37 @@ const styles: Record<string, CSSProperties> = {
     height: 5,
   },
   entryBadge: {
-    margin: "4px 0 10px",
+    margin: "4px 0 8px",
     fontSize: 12,
     fontWeight: 900,
     letterSpacing: ".14em",
   },
   entryTitle: {
     margin: 0,
-    fontSize: 24,
+    fontSize: 21,
     letterSpacing: 0,
   },
   entryText: {
-    margin: "10px 0 0",
+    margin: "8px 0 0",
     color: "#526174",
-    lineHeight: 1.7,
-    fontSize: 14,
+    lineHeight: 1.55,
+    fontSize: 13,
   },
   entryActions: {
-    marginTop: 16,
+    marginTop: 12,
     display: "flex",
     flexWrap: "wrap",
     gap: 10,
   },
   entryPrimary: {
-    padding: "11px 14px",
+    padding: "10px 12px",
     borderRadius: 8,
     color: "#fff",
     textDecoration: "none",
     fontWeight: 900,
   },
   entrySecondary: {
-    padding: "11px 14px",
+    padding: "10px 12px",
     borderRadius: 8,
     background: "#fff",
     border: "1px solid #cbd5e1",
