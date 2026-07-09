@@ -126,8 +126,8 @@ export default function SelectModePage() {
       <section style={styles.shell}>
         <div style={styles.hero}>
           <p style={styles.kicker}>LEARNING MENU</p>
-          <h1 style={styles.title}>大項目から小項目を選ぶ</h1>
-          <p style={styles.lead}>日本語・製造系・ゲーム・AIの4つに分けました。目的に近い小項目から始められます。</p>
+          <h1 style={styles.title}>学びたい内容を選ぶ</h1>
+          <p style={styles.lead}>製造現場の日本語、基礎日本語、ゲーム、AI練習を目的別にまとめています。今やりたい練習から始められます。</p>
         </div>
 
         <div style={styles.categoryGrid}>
