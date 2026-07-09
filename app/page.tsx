@@ -106,30 +106,30 @@ export default function HomePage() {
               <p style={styles.machineText}>安全・品質・報連相に必要な日本語を、現場目線で反復学習。</p>
             </div>
             </div>
-
-            <div style={{ ...styles.loginCards, ...(isNarrow ? styles.loginCardsNarrow : null) }}>
-            <EntryCard
-              badge="PERSONAL"
-              title="個人で学習する"
-              description="自分のアカウントでログインして、学習項目・模擬試験・復習・バッジ・学習履歴を使います。"
-              primaryHref={user ? "/select-mode" : "/login"}
-              primaryLabel={user ? "学習メニューへ" : "個人ログイン"}
-              secondaryHref="/register"
-              secondaryLabel="新規登録"
-              accent="#2563eb"
-            />
-            <EntryCard
-              badge="FOR BUSINESS"
-              title="企業として管理する"
-              description="企業管理者アカウントでログインして、所属学習者の学習回数・正答率・最終学習日・バッジ数を確認します。"
-              primaryHref="/company/login"
-              primaryLabel="企業ログイン"
-              secondaryHref="/for-business"
-              secondaryLabel="法人向け説明"
-              accent="#0f766e"
-            />
-            </div>
           </div>
+        </div>
+
+        <div style={{ ...styles.loginCards, ...(isNarrow ? styles.loginCardsNarrow : null) }}>
+          <EntryCard
+            badge="PERSONAL"
+            title="個人で学習する"
+            description="自分のアカウントでログインして、学習項目・模擬試験・復習・バッジ・学習履歴を使います。"
+            primaryHref={user ? "/select-mode" : "/login"}
+            primaryLabel={user ? "学習メニューへ" : "個人ログイン"}
+            secondaryHref="/register"
+            secondaryLabel="新規登録"
+            accent="#2563eb"
+          />
+          <EntryCard
+            badge="FOR BUSINESS"
+            title="企業として管理する"
+            description="企業管理者アカウントでログインして、所属学習者の学習回数・正答率・最終学習日・バッジ数を確認します。"
+            primaryHref="/company/login"
+            primaryLabel="企業ログイン"
+            secondaryHref="/for-business"
+            secondaryLabel="法人向け説明"
+            accent="#0f766e"
+          />
         </div>
 
         <section style={styles.featureBand}>
@@ -387,6 +387,7 @@ const styles: Record<string, CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 12,
+    marginTop: 18,
   },
   loginCardsNarrow: {
     gridTemplateColumns: "1fr",
