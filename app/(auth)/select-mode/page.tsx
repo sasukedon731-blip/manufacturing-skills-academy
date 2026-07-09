@@ -103,7 +103,7 @@ export default function SelectModePage() {
       <main style={styles.page}>
         <AppHeader title="学習モード選択" />
         <section style={styles.shell}>
-          <Link href="/select-mode" style={styles.backLink}>学習項目一覧へ戻る</Link>
+          <Link href="/select-mode" style={styles.backLink}>学習メニューへ戻る</Link>
           <div style={styles.hero}>
             <p style={styles.kicker}>SELECT MODE</p>
             <h1 style={styles.title}>{selectedQuiz.title}</h1>
@@ -122,7 +122,7 @@ export default function SelectModePage() {
 
   return (
     <main style={styles.page}>
-      <AppHeader title="学習項目" />
+      <AppHeader title="学習メニュー" />
       <section style={styles.shell}>
         <div style={styles.hero}>
           <p style={styles.kicker}>LEARNING MENU</p>
