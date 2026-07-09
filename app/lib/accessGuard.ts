@@ -10,20 +10,11 @@ export function guardQuizAccess(params: {
 }): GuardResult {
   const { type, selected } = params
 
-  // type 未指定
-  if (!type) {
-    return { ok: false, redirect: "/select-mode" }
-  }
+  if (!type) return { ok: false, redirect: "/select-mode" }
 
-  // selected が空
-  if (!selected || selected.length === 0) {
-    return { ok: false, redirect: "/select-quizzes" }
-  }
-
-  // 未選択教材へアクセス
-  if (!selected.includes(type as QuizType)) {
-    return { ok: false, redirect: "/select-mode" }
-  }
+  // 製造版では教材選択画面を使わない。未設定/不一致は教材一覧へ戻す。
+  if (!selected || selected.length === 0) return { ok: false, redirect: "/select-mode" }
+  if (!selected.includes(type as QuizType)) return { ok: false, redirect: "/select-mode" }
 
   return { ok: true }
 }

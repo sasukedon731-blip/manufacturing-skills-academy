@@ -47,7 +47,9 @@ service cloud.firestore {
         "billing",
         "accountType",
         "companyId",
-        "devUnlockAll"
+        "devUnlockAll",
+        "trialStartedAt",
+        "trialEndsAt"
       ];
     }
 
@@ -135,7 +137,8 @@ service cloud.firestore {
     }
 
     match /companies/{companyCode} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if false;
       allow create, update, delete: if isAdmin();
     }
 

@@ -2,7 +2,8 @@
 "use client"
 
 import { db } from "@/app/lib/firebase"
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+import { buildEntitledQuizTypes, normalizeSelectedForPlan, type PlanId } from "@/app/lib/plan"
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore"
 
 export type UserRole = "admin" | "user"
 
@@ -13,10 +14,8 @@ type EnsureParams = {
 }
 
 /**
- * ✅ users/{uid} を必ず「実在するドキュメント」として作る/補正する
- * - 初回：role/user を含めて作成（空ドキュメント問題を根絶）
- * - 既存：roleは触らず、email/displayName/updatedAt を安全に merge
- * - ⚠️ 既存ユーザーの selectedQuizTypes を絶対に上書きしない
+ * users/{uid} を必ず存在させる。
+ * 新規登録画面を通らずAuthだけ作られたユーザーでも、1日無料体験つきの個人ユーザーとして復旧する。
  */
 export async function ensureUserProfile(params: EnsureParams) {
   const { uid } = params
@@ -27,16 +26,24 @@ export async function ensureUserProfile(params: EnsureParams) {
   const snap = await getDoc(ref)
 
   if (!snap.exists()) {
+    const plan: PlanId = "trial"
+    const entitledQuizTypes = buildEntitledQuizTypes(plan)
+    const selectedQuizTypes = normalizeSelectedForPlan([], entitledQuizTypes, plan)
+    const now = new Date()
+    const trialEndsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+
     await setDoc(ref, {
       uid,
       email,
       displayName,
       role: "user" as UserRole,
-
-      // 初回だけ初期値
-      quizLimit: 3,
-      selectedQuizTypes: [],
-
+      accountType: "personal",
+      plan,
+      trialStartedAt: Timestamp.fromDate(now),
+      trialEndsAt: Timestamp.fromDate(trialEndsAt),
+      selectedQuizTypes,
+      nextChangeAllowedAt: null,
+      schemaVersion: 3,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -44,10 +51,6 @@ export async function ensureUserProfile(params: EnsureParams) {
   }
 
   const data = snap.data() as any
-
-  // ✅ 既存：roleは変更しない（事故防止）
-  // ✅ email/displayName は未設定なら補完してOK
-  // ✅ quizLimit/selectedQuizTypes は「無いときだけ」補完（上書き禁止）
   const patch: Record<string, any> = {
     uid,
     updatedAt: serverTimestamp(),
@@ -56,15 +59,9 @@ export async function ensureUserProfile(params: EnsureParams) {
   if (email && !data?.email) patch.email = email
   if (displayName && !data?.displayName) patch.displayName = displayName
 
-  if (typeof data?.quizLimit !== "number") patch.quizLimit = 3
-  if (!Array.isArray(data?.selectedQuizTypes)) patch.selectedQuizTypes = []
-
   await setDoc(ref, patch, { merge: true })
 }
 
-/**
- * ✅ 自分のrole取得（存在しない場合は user 扱い）
- */
 export async function getUserRole(uid: string): Promise<UserRole> {
   const ref = doc(db, "users", uid)
   const snap = await getDoc(ref)

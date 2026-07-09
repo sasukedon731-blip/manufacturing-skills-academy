@@ -56,8 +56,7 @@ export default function ReviewClientWrapper() {
         const gate = await assertActiveAccess(user.uid)
         setBillingStatus(gate.billingStatus)
         if (!gate.ok) {
-          setAccessBlocked(true)
-          setAllowed([])
+          router.replace("/plans")
           return
         }
         const st = await loadAndRepairUserPlanState(user.uid)
@@ -99,7 +98,7 @@ export default function ReviewClientWrapper() {
 
     // (C) 今月の受講教材が空 → 選択へ
     if (allowed.length === 0) {
-      router.replace("/select-quizzes")
+      router.replace("/select-mode")
       return
     }
 

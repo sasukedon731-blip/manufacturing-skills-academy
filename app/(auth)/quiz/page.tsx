@@ -43,8 +43,7 @@ export default function QuizPage() {
         const gate = await assertActiveAccess(user.uid)
         setBillingStatus(gate.billingStatus)
         if (!gate.ok) {
-          setAccessBlocked(true)
-          setAllowed([])
+          router.replace("/plans")
           return
         }
 

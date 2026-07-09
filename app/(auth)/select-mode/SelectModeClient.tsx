@@ -93,7 +93,7 @@ export default function SelectModeClient() {
               <h1 style={S.heroTitle}>学習する教材を選んでください</h1>
               <p style={S.heroText}>製造現場の日本語、会話、リスニング、技能検定対策まで一つの画面から始められます。</p>
             </div>
-            <button style={S.changeBtn} onClick={() => router.push("/select-quizzes?industry=manufacturing")}>教材を変更</button>
+            <button style={S.changeBtn} onClick={() => router.push("/plans")}>プラン確認</button>
           </section>
 
           <section style={S.grid}>

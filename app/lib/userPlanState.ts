@@ -252,18 +252,10 @@ export async function savePlanAndNormalizeSelected(params: {
   await setDoc(
     ref,
     {
+      // billing はKOMOJU/API側だけが更新する。
+      // クライアント側では課金状態を作成・変更しない。
       plan: params.plan,
       schemaVersion: 3,
-      billing: data?.billing
-        ? { ...data.billing, currentPlan: params.plan }
-        : {
-            accountType: "personal",
-            method: "convenience",
-            status: "active",
-            currentPlan: params.plan,
-            currentPeriodEnd: null,
-            aiConversationEnabled: false,
-          },
       selectedQuizTypes: selected,
       entitledQuizTypes: deleteField(),
       quizLimit: deleteField(),
