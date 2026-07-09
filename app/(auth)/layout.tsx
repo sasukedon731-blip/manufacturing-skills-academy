@@ -17,6 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const [stateLoaded, setStateLoaded] = useState(false)
   const isAdmin = pathname.startsWith("/admin")
   const isPlans = pathname === "/plans"
+  const isTrialExpired = pathname === "/trial-expired"
   const isGame = pathname === "/game" || pathname.startsWith("/game/")
 
   useEffect(() => {
@@ -46,9 +47,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         const gate = await assertActiveAccess(user.uid)
 
-        // 管理画面とプラン画面以外は、期限切れ/未決済なら必ずプラン画面へ。
-        if (!gate.ok && !isPlans && !isAdmin) {
-          router.replace("/plans")
+        // 管理画面・プラン画面・期限切れ説明画面以外は、期限切れ/未決済なら説明画面へ。
+        // いきなり料金ページへ飛ばすと理由が伝わらないため、まず /trial-expired で案内する。
+        if (!gate.ok && !isPlans && !isTrialExpired && !isAdmin) {
+          router.replace("/trial-expired")
+          return
+        }
+
+        // すでに利用可能なユーザーが期限切れ説明画面を開いた場合は、学習メニューへ戻す。
+        if (gate.ok && isTrialExpired) {
+          router.replace("/select-mode")
           return
         }
 
@@ -67,7 +75,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     return () => {
       alive = false
     }
-  }, [user?.uid, user?.email, user?.displayName, loading, pathname, router, isAdmin, isPlans, isGame, user])
+  }, [user?.uid, user?.email, user?.displayName, loading, pathname, router, isAdmin, isPlans, isTrialExpired, isGame, user])
 
   if (loading) return <p style={{ textAlign: "center" }}>読み込み中…</p>
   if (!user && !isGame) return null

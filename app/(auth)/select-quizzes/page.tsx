@@ -17,7 +17,7 @@ export default function SelectQuizzesRedirectPage() {
       }
 
       const gate = await assertActiveAccess(user.uid)
-      router.replace(gate.ok ? "/select-mode" : "/plans")
+      router.replace(gate.ok ? "/select-mode" : "/trial-expired")
     })
 
     return () => unsub()
