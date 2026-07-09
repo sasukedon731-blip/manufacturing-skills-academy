@@ -84,29 +84,6 @@ export default function HomePage() {
               )}
             </div>
           </div>
-
-
-          <div style={styles.heroRight}>
-            <div style={styles.heroVisual} aria-label="Manufacturing Skills Academy visual">
-            <div style={styles.machineCard}>
-              <div style={styles.machineTop}>
-                <span style={styles.machineBadge}>製造 × 日本語 × AI</span>
-                <span style={styles.machineStatus}>LIVE</span>
-              </div>
-              <div style={styles.gearWrap}>
-                <span style={styles.bigGear}>⚙</span>
-                <span style={styles.aiMark}>AI</span>
-                <span style={styles.jaMark}>あ</span>
-              </div>
-              <div className="factoryLines" style={styles.factoryLines}>
-                <span />
-                <span />
-                <span />
-              </div>
-              <p style={styles.machineText}>安全・品質・報連相に必要な日本語を、現場目線で反復学習。</p>
-            </div>
-            </div>
-          </div>
         </div>
 
         <div style={{ ...styles.loginCards, ...(isNarrow ? styles.loginCardsNarrow : null) }}>
@@ -219,8 +196,8 @@ const styles: Record<string, CSSProperties> = {
   },
   hero: {
     display: "grid",
-    gridTemplateColumns: "minmax(480px, 1.15fr) minmax(320px, .85fr)",
-    gap: 26,
+    gridTemplateColumns: "1fr",
+    gap: 18,
     alignItems: "start",
   },
   heroNarrow: {
@@ -239,8 +216,8 @@ const styles: Record<string, CSSProperties> = {
   },
   title: {
     margin: 0,
-    maxWidth: 720,
-    fontSize: "clamp(36px, 4.1vw, 56px)",
+    maxWidth: 880,
+    fontSize: "clamp(38px, 5vw, 64px)",
     lineHeight: 1.14,
     letterSpacing: 0,
   },
