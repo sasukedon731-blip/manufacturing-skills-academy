@@ -4,22 +4,19 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { APP_MENU } from "@/app/components/appMenu"
-import { onAuthStateChanged, signOut, User } from "firebase/auth"
+import { onAuthStateChanged, User } from "firebase/auth"
 import { collection, doc, getDoc, getDocs, limit, orderBy, query } from "firebase/firestore"
 
 import { auth, db } from "@/app/lib/firebase"
 import type { QuizType } from "@/app/data/types"
 import { quizCatalog } from "@/app/data/quizCatalog"
 import { fetchMyAttackRank } from "../game/firestore"
-import BillingStatusCard from "@/app/components/billing/BillingStatusCard"
-import { getPlanLabel } from "@/app/lib/billingAccess"
 import {
   getPreviewBadgeMeta,
   getTotalBadgeCount,
   getUnlockedBadgeCount,
   getRarityColors,
 } from "@/app/lib/badges"
-import PendingPaymentNotice from "@/app/components/billing/PendingPaymentNotice"
 
 type QuizResult = {
   score: number
@@ -27,7 +24,7 @@ type QuizResult = {
   accuracy?: number
   quizType?: QuizType | string
   mode?: string
-  createdAt?: any
+  createdAt?: unknown
 }
 
 type Progress = {
@@ -35,26 +32,22 @@ type Progress = {
   todaySessions?: number
   streak?: number
   bestStreak?: number
-  updatedAt?: any
+  updatedAt?: unknown
 }
 
+type TimestampLike = {
+  toDate?: () => Date
+  seconds?: number
+}
 
-type BillingData = Partial<{
-  status: "pending" | "active" | "past_due" | "canceled"
-  currentPlan: "trial" | "free" | "3" | "5" | "7"
-  currentPeriodEnd: any
-  aiConversationEnabled: boolean
-  aiConversationExpiresAt: any
-  method: "convenience" | "card"
-}>
-
-function toDate(v: any): Date | null {
+function toDate(v: unknown): Date | null {
   if (!v) return null
   if (v instanceof Date) return v
-  if (typeof v?.toDate === "function") return v.toDate()
-  if (typeof v?.seconds === "number") return new Date(v.seconds * 1000)
+  const maybeTimestamp = v as TimestampLike
+  if (typeof maybeTimestamp.toDate === "function") return maybeTimestamp.toDate()
+  if (typeof maybeTimestamp.seconds === "number") return new Date(maybeTimestamp.seconds * 1000)
   try {
-    return new Date(v)
+    return new Date(String(v))
   } catch {
     return null
   }
@@ -187,54 +180,6 @@ type DetailState = {
   progress: Progress | null
 }
 
-// =======================
-// ✅ 業種（マイページ最適化）
-// =======================
-type IndustryId = "construction" | "manufacturing" | "care" | "driver" | "undecided"
-
-const INDUSTRY_LABEL: Record<IndustryId, string> = {
-  construction: "建設",
-  manufacturing: "製造",
-  care: "介護",
-  driver: "運転・免許",
-  undecided: "未定（海外から）",
-}
-
-function isIndustryId(v: any): v is IndustryId {
-  return v === "construction" || v === "manufacturing" || v === "care" || v === "driver" || v === "undecided"
-}
-
-const LS_INDUSTRY_KEY = "selected-industry"
-
-const JAPANESE_BASE: QuizType[] = ["japanese-n4", "japanese-n3", "japanese-n2", "speaking-practice"]
-
-const INDUSTRY_EXTRA: Record<IndustryId, QuizType[]> = {
-  construction: [],
-  manufacturing: [
-    "genba-listening",
-    "genba-phrasebook",
-    "kansai-listening",
-    "dialect-listening",
-    "dialect-meaning",
-    "confusing-japanese",
-    "manufacturing-meaning",
-    "manufacturing-word",
-    "manufacturing-listening",
-    "manufacturing-conversation",
-    "manufacturing-conversation-50",
-    "skill-test-machining",
-  ],
-  care: [],
-  driver: [],
-  undecided: ["kansai-listening", "dialect-listening", "dialect-meaning", "confusing-japanese"],
-}
-
-function buildAllowed(industry: IndustryId | null): Set<string> {
-  if (!industry) return new Set()
-  const extra = INDUSTRY_EXTRA[industry] ?? []
-  return new Set<string>([...JAPANESE_BASE, ...extra])
-}
-
 export default function MyPage() {
   const router = useRouter()
 
@@ -246,17 +191,7 @@ export default function MyPage() {
 
   const [attackRanks, setAttackRanks] = useState<Record<string, { rank: number | null; bestScore: number }>>({})
 
-  // ✅ ユーザーの業種（Firestore優先、無ければ localStorage）
-  const [industry, setIndustry] = useState<IndustryId | null>(null)
-  const [showAllCards, setShowAllCards] = useState(false)
   const [badges, setBadges] = useState<string[]>([])
-  const [billing, setBilling] = useState<BillingData | null>(null)
-
-  const withIndustry = (path: string) => {
-    if (!industry) return path
-    const join = path.includes("?") ? "&" : "?"
-    return `${path}${join}industry=${encodeURIComponent(industry)}`
-  }
 
   // ✅ インデックス不要：結果まとめ持ち
   const [allResults, setAllResults] = useState<QuizResult[]>([])
@@ -320,7 +255,7 @@ export default function MyPage() {
   }, [user])
 
   // =======================
-  // 業種ロード（Firestore → localStorage）
+  // User profile
   // =======================
   useEffect(() => {
     ;(async () => {
@@ -328,27 +263,12 @@ export default function MyPage() {
       try {
         const userRef = doc(db, "users", user.uid)
         const snap = await getDoc(userRef)
-        const userData = snap.exists() ? ((snap.data() as any) ?? {}) : {}
-        const v = userData?.industry ?? null
-        const badgeList = Array.isArray(userData?.badges) ? userData.badges.filter((x: any) => typeof x === "string") : []
+        const userData = snap.exists() ? (snap.data() as Record<string, unknown>) : {}
+        const badgeList = Array.isArray(userData.badges) ? userData.badges.filter((x): x is string => typeof x === "string") : []
         setBadges(badgeList)
-        const billingData = userData?.billing && typeof userData.billing === "object" ? userData.billing as BillingData : null
-        setBilling(billingData)
-        if (isIndustryId(v)) {
-          setIndustry(v)
-          try {
-            localStorage.setItem(LS_INDUSTRY_KEY, v)
-          } catch {}
-          return
-        }
       } catch {
         // ignore
       }
-
-      try {
-        const saved = localStorage.getItem(LS_INDUSTRY_KEY)
-        if (isIndustryId(saved)) setIndustry(saved)
-      } catch {}
     })()
   }, [user?.uid])
 
@@ -366,13 +286,13 @@ export default function MyPage() {
         const snapAll = await getDocs(qAll)
 
         const all: QuizResult[] = snapAll.docs.map((d) => {
-          const data = d.data() as any
+          const data = d.data() as Record<string, unknown>
           return {
             score: Number(data.score ?? 0),
             total: Number(data.total ?? 0),
             accuracy: typeof data.accuracy === "number" ? data.accuracy : undefined,
-            quizType: data.quizType ?? undefined,
-            mode: data.mode ?? undefined,
+            quizType: typeof data.quizType === "string" ? data.quizType : undefined,
+            mode: typeof data.mode === "string" ? data.mode : undefined,
             createdAt: data.createdAt ?? null,
           }
         })
@@ -394,7 +314,7 @@ export default function MyPage() {
             try {
               const pRef = doc(db, "users", user.uid, "progress", q.id)
               const pSnap = await getDoc(pRef)
-              prog[q.id] = pSnap.exists() ? ((pSnap.data() as any) ?? {}) : {}
+              prog[q.id] = pSnap.exists() ? (pSnap.data() as Progress) : {}
             } catch {
               prog[q.id] = {}
             }
@@ -424,7 +344,7 @@ export default function MyPage() {
       // ✅ progress は正確に取る
       const pRef = doc(db, "users", user.uid, "progress", quizType)
       const pSnap = await getDoc(pRef)
-      const prog = pSnap.exists() ? ((pSnap.data() as any) ?? {}) : null
+      const prog = pSnap.exists() ? (pSnap.data() as Progress) : null
 
       setDetail({
         open: true,
@@ -444,32 +364,19 @@ export default function MyPage() {
 
   const closeDetail = () => setDetail((d) => ({ ...d, open: false }))
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth)
-    } finally {
-      router.push("/")
-    }
-  }
-
   // =======================
-  // catalog visible by industry
+  // catalog
   // =======================
-  const allowedSet = useMemo(() => buildAllowed(industry), [industry])
-
   const visibleCatalog = useMemo(() => {
-    const enabled = quizCatalog.filter((q) => q.enabled).sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
-    if (!industry || showAllCards) return enabled
-    return enabled.filter((q) => allowedSet.has(q.id))
-  }, [industry, showAllCards, allowedSet])
+    return quizCatalog.filter((q) => q.enabled).sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+  }, [])
 
   const badgeItems = useMemo(() => {
   return getPreviewBadgeMeta(badges, 8)
 }, [badges])
 
 const unlockedBadgeCount = useMemo(() => getUnlockedBadgeCount(badges), [badges])
-const totalBadgeCount = useMemo(() => getTotalBadgeCount(), [badges])
-const currentPlanLabel = useMemo(() => getPlanLabel(billing?.currentPlan ?? null), [billing])
+const totalBadgeCount = useMemo(() => getTotalBadgeCount(), [])
 
   // =======================
   // summaries
@@ -522,13 +429,11 @@ const currentPlanLabel = useMemo(() => getPlanLabel(billing?.currentPlan ?? null
 
           <nav style={S.nav}>
             {APP_MENU.map((it) => {
-              const href =
-                it.href === "/select-mode" ? withIndustry(it.href) : it.href
               return (
                 <Link
                   key={it.href}
                   style={S.navItem}
-                  href={href}
+                  href={it.href}
                   onClick={() => setDrawerOpen(false)}
                 >
                   {it.icon} {it.label}
@@ -556,6 +461,22 @@ const currentPlanLabel = useMemo(() => getPlanLabel(billing?.currentPlan ?? null
         </header>
 
         {error ? <div style={S.alert}>{error}</div> : null}
+
+        {/* 学習サマリー */}
+        <section style={S.card}>
+          <div style={S.cardHeadRow}>
+            <div style={S.cardTitle}>学習サマリー</div>
+          </div>
+
+          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <MiniStat label="総学習回数" value={`${totalSessionsAll}`} sub="全教材合計" />
+              <MiniStat label="最新の合格率" value={latestAcc === null ? "—" : `${latestAcc}%`} sub="直近の結果" />
+              <MiniStat label="今日の学習" value={`${todaySessionsAll}`} sub="今日の回数" />
+              <MiniStat label="最大streak" value={streakMax ? String(streakMax) : "—"} sub="教材別の最大streak" />
+            </div>
+          </div>
+        </section>
 
         {/* 🏆 アタック戦績（縦並び） */}
         <section style={S.card}>
@@ -586,53 +507,6 @@ const currentPlanLabel = useMemo(() => getPlanLabel(billing?.currentPlan ?? null
               onClick={() => router.push(`/game?type=japanese-n4&kind=memory-burst&mode=attack`)}
             />
           </div>
-        </section>
-
-        {/* ✅ あなたの設定 */}
-        <section style={S.card}>
-          <div style={S.cardHeadRow}>
-            <div style={S.cardTitle}>あなたの設定</div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button style={S.linkBtn} onClick={() => router.push(withIndustry("/select-quizzes"))} title="教材選択へ">
-                教材を変更 →
-              </button>
-
-              <button style={S.linkBtn} onClick={() => setShowAllCards((v) => !v)} title="教材カードの表示切替">
-                {showAllCards ? "業種で絞る" : "すべて表示"}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-            <div style={S.kv}>
-              <div style={S.kvLabel}>選択中の業種</div>
-              <div style={S.kvValue}>{industry ? INDUSTRY_LABEL[industry] : "未設定"}</div>
-              <div style={S.kvHint}>
-                {industry
-                  ? "マイページの教材カードは業種で最適化されています（日本語基礎は常に表示）"
-                  : "業種を選ぶと、教材カードが最適化されます"}
-              </div>
-            </div>
-
-            <div style={S.kv}>
-              <div style={S.kvLabel}>現在のプラン</div>
-              <div style={S.kvValue}>{currentPlanLabel}</div>
-              <div style={S.kvHint}>契約状態や有効期限は下の「ご利用プラン」で確認できます</div>
-            </div>
-
-            {/* ✅ 進捗（2列・コンパクト） */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <MiniStat label="総学習回数" value={`${totalSessionsAll}`} sub="全教材合計" />
-              <MiniStat label="最新の合格率" value={latestAcc === null ? "—" : `${latestAcc}%`} sub="直近の結果" />
-              <MiniStat label="今日の学習" value={`${todaySessionsAll}`} sub="今日の回数" />
-              <MiniStat label="最大streak" value={streakMax ? String(streakMax) : "—"} sub="教材別の最大streak" />
-            </div>
-          </div>
-        </section>
-
-        <section style={S.card}>
-          <PendingPaymentNotice billing={billing} />
-          <BillingStatusCard billing={billing} plansHref="/plans" />
         </section>
 
         {/* AI学習履歴 */}
@@ -870,7 +744,7 @@ const currentPlanLabel = useMemo(() => getPlanLabel(billing?.currentPlan ?? null
 
               const totalSessions = Number(p.totalSessions ?? 0)
               const streak = Number(p.streak ?? 0)
-              const lastAcc = last ? calcAcc(last as any) : null
+              const lastAcc = last ? calcAcc(last) : null
 
               const isThisLoading = detailLoading && detailTargetId === q.id
 
