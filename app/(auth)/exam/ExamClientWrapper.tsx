@@ -9,6 +9,7 @@ import { parseQuizType } from "@/app/lib/quizTypeGuard"
 import { getQuizByType } from "@/app/lib/getQuizByType"
 import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import { assertActiveAccess } from "@/app/lib/guards"
+import type { BillingStatus } from "@/app/lib/plan"
 import LockedFeature from "@/app/components/LockedFeature"
 
 export default function ExamClientWrapper() {
@@ -21,7 +22,7 @@ export default function ExamClientWrapper() {
   const [stateLoaded, setStateLoaded] = useState(false)
   const [allowed, setAllowed] = useState<QuizType[] | null>(null)
   const [accessBlocked, setAccessBlocked] = useState(false)
-  const [billingStatus, setBillingStatus] = useState<"pending" | "active" | "past_due" | "canceled">("active")
+  const [billingStatus, setBillingStatus] = useState<BillingStatus>("active")
 
   // ① plan state 読み込み（＋自動修復）
   useEffect(() => {

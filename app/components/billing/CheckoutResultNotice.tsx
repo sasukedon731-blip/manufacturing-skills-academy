@@ -12,6 +12,58 @@ export default function CheckoutResultNotice({
   checkout,
   showAiCta = false,
 }: Props) {
+  if (checkout === "return") {
+    return (
+      <section
+        style={{
+          border: "1px solid #bbf7d0",
+          background: "#f0fdf4",
+          borderRadius: 20,
+          padding: 20,
+        }}
+      >
+        <div style={{ fontWeight: 900, fontSize: 20, color: "#166534" }}>
+          決済ページから戻りました
+        </div>
+
+        <div
+          style={{
+            marginTop: 8,
+            fontSize: 14,
+            lineHeight: 1.8,
+            color: "#166534",
+          }}
+        >
+          決済状況を確認しています。カード決済は確認後、コンビニ決済は入金確認後に学習機能が有効になります。
+          反映まで少し時間がかかる場合があります。
+        </div>
+
+        <div
+          style={{
+            marginTop: 16,
+            display: "flex",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <Link href="/mypage" style={primaryBtn}>
+            マイページで確認
+          </Link>
+
+          <Link href="/plans" style={secondaryBtn}>
+            プランへ戻る
+          </Link>
+
+          {showAiCta ? (
+            <Link href="/conversation" style={secondaryBtn}>
+              AI会話を開く
+            </Link>
+          ) : null}
+        </div>
+      </section>
+    )
+  }
+
   if (checkout === "success") {
     return (
       <section

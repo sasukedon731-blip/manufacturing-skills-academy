@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import ReviewClient from "./ReviewClient"
 import { quizzes } from "@/app/data/quizzes"
 import type { QuizType } from "@/app/data/types"
+import type { BillingStatus } from "@/app/lib/plan"
 import { useAuth } from "@/app/lib/useAuth"
 import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import { assertActiveAccess } from "@/app/lib/guards"
@@ -35,7 +36,7 @@ export default function ReviewClientWrapper() {
   const [stateLoaded, setStateLoaded] = useState(false)
   const [allowed, setAllowed] = useState<QuizType[] | null>(null)
   const [accessBlocked, setAccessBlocked] = useState(false)
-  const [billingStatus, setBillingStatus] = useState<"pending" | "active" | "past_due" | "canceled">("active")
+  const [billingStatus, setBillingStatus] = useState<BillingStatus>("active")
 
   // ① plan state 読み込み（＋自動修復）
   useEffect(() => {

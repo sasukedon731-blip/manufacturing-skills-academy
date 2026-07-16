@@ -7,6 +7,7 @@ import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import { assertActiveAccess } from "@/app/lib/guards"
 import { parseQuizType } from "@/app/lib/quizTypeGuard"
 import { getQuizByType } from "@/app/lib/getQuizByType"
+import type { BillingStatus } from "@/app/lib/plan"
 import NormalClient from "./NormalClient"
 import type { QuizType } from "@/app/data/types"
 import LockedFeature from "@/app/components/LockedFeature"
@@ -26,7 +27,7 @@ export default function NormalClientWrapper() {
   const [allowed, setAllowed] = useState<QuizType[] | null>(null)
   const [stateLoaded, setStateLoaded] = useState(false)
   const [accessBlocked, setAccessBlocked] = useState(false)
-  const [billingStatus, setBillingStatus] = useState<"pending" | "active" | "past_due" | "canceled">("active")
+  const [billingStatus, setBillingStatus] = useState<BillingStatus>("active")
 
   // ① user の plan state を読み込み（＋自動修復）
   useEffect(() => {

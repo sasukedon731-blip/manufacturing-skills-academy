@@ -45,15 +45,22 @@ export function normalizeSelectedForPlan(
   return trimmed
 }
 
-export type BillingStatus = "pending" | "active" | "past_due" | "canceled"
+export type BillingStatus = "trialing" | "pending" | "active" | "past_due" | "canceled" | "inactive"
 export type BillingMethod = "convenience" | "card" | "bank_transfer"
 export type AccountType = "personal" | "company"
 
 export function getBillingStatus(userDoc: any): BillingStatus {
+  if (!userDoc) return "inactive"
+  if (userDoc.accountType === "company" || !!userDoc.companyCode) return "active"
+
   const s = userDoc?.billing?.status
   if (s === "pending" || s === "active" || s === "past_due" || s === "canceled") return s
-  // 既存のtrialユーザーはbilling未作成でも無料体験扱いで入れる。
-  return "active"
+
+  const trialEnd = toDate(userDoc.trialEndsAt)
+  if ((userDoc.plan === "trial" || !userDoc.plan) && trialEnd && trialEnd.getTime() > Date.now()) {
+    return "trialing"
+  }
+  return "inactive"
 }
 
 function toDate(value: any): Date | null {
@@ -81,7 +88,7 @@ export function isAccessActive(userDoc: any): boolean {
   // 無料体験。trialEndsAtが無い既存データは移行中のため許可。
   if (userDoc.plan === "trial" || !userDoc.plan) {
     const trialEnd = toDate(userDoc.trialEndsAt)
-    return trialEnd ? trialEnd.getTime() > Date.now() : true
+    return trialEnd ? trialEnd.getTime() > Date.now() : false
   }
 
   return false

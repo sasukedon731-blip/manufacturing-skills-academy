@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { signOut } from "firebase/auth"
@@ -35,7 +36,14 @@ export default function AppHeader({ title }: Props) {
       <header className="appHeader" aria-label="header">
         <div className="appHeaderLeft">
           <Link href="/" className="appHeaderBrand" aria-label="トップへ">
-            <span className="appHeaderLogo" aria-hidden="true">⚙</span>
+            <Image
+              src="/icon-192.png"
+              width={40}
+              height={40}
+              className="appHeaderLogoImage"
+              alt=""
+              priority
+            />
             <span className="appHeaderNameWrap">
               <span className="appHeaderName">Manufacturing Skills Academy</span>
               <span className="appHeaderTagline">Japanese × AI Learning</span>

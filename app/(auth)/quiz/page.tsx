@@ -11,6 +11,7 @@ import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import { parseQuizType } from "@/app/lib/quizTypeGuard"
 import { getQuizByType } from "@/app/lib/getQuizByType"
 import type { QuizType } from "@/app/data/types"
+import type { BillingStatus } from "@/app/lib/plan"
 
 export default function QuizPage() {
   const router = useRouter()
@@ -23,7 +24,7 @@ export default function QuizPage() {
   const [stateLoaded, setStateLoaded] = useState(false)
   const [allowed, setAllowed] = useState<QuizType[] | null>(null)
   const [accessBlocked, setAccessBlocked] = useState(false)
-  const [billingStatus, setBillingStatus] = useState<"pending" | "active" | "past_due" | "canceled">("active")
+  const [billingStatus, setBillingStatus] = useState<BillingStatus>("active")
 
   useEffect(() => {
     if (loading) return

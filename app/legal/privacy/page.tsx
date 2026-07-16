@@ -11,30 +11,20 @@ export default function PrivacyPage() {
         <h1 style={styles.title}>プライバシーポリシー</h1>
 
         <p style={styles.text}>
-          運営者は、本サービスにおけるユーザー情報を以下の方針に基づき適切に取り扱います。
+          株式会社アウトインプラス（以下「当社」といいます）は、Manufacturing Skills Academy（以下「本サービス」といいます）におけるユーザー情報を、以下の方針に基づき取り扱います。
         </p>
 
         <Section title="1. 取得する情報">
-          ・メールアドレス、ログイン情報
-          {"\n"}・学習履歴、回答履歴、バッジ、進捗情報
-          {"\n"}・決済に関する情報
-          {"\n"}・お問い合わせ内容
-          {"\n"}・アクセス情報、端末情報、Cookie等
-          {"\n"}・AI会話・AIスピーキング利用時の入力内容、文字起こし、評価結果
+          メールアドレス、ログイン情報、表示名、学習履歴、回答履歴、進捗情報、バッジ情報、決済に関する情報、お問い合わせ内容、アクセス情報、端末情報、Cookie等を取得する場合があります。
+          AI会話・AIスピーキング利用時には、入力内容、音声、文字起こし、評価結果等を取得する場合があります。
         </Section>
 
         <Section title="2. 利用目的">
-          ・本サービスの提供、本人確認、認証のため
-          {"\n"}・決済処理、購入状況の管理のため
-          {"\n"}・学習履歴、バッジ、進捗表示のため
-          {"\n"}・AI機能の提供、品質改善のため
-          {"\n"}・企業アカウントにおける管理画面表示のため
-          {"\n"}・不正利用防止、セキュリティ向上のため
-          {"\n"}・お問い合わせ対応のため
+          本サービスの提供、本人確認、認証、決済処理、購入状況の管理、学習履歴・進捗の表示、AI機能の提供、品質改善、企業管理画面での所属学習者の確認、不正利用防止、セキュリティ向上、お問い合わせ対応のために利用します。
         </Section>
 
         <Section title="3. 企業アカウントでの情報共有">
-          企業ログインを利用する場合、企業管理者は所属ユーザーの学習進捗、成績、利用状況を確認できる場合があります。
+          企業コードを利用して登録した場合、企業管理者は所属ユーザーの氏名、メールアドレス、学習回数、正答率、最終学習日、進行中教材等を確認できる場合があります。
         </Section>
 
         <Section title="4. 第三者提供">
@@ -42,7 +32,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="5. 外部サービスの利用">
-          本サービスでは、Firebase、KOMOJU、AI関連API等の外部サービスを利用する場合があります。サービス提供に必要な範囲で情報が送信されることがあります。
+          本サービスでは、認証・データ保存、決済、AI機能等の提供に外部サービスを利用する場合があります。サービス提供に必要な範囲で情報が送信されることがあります。
         </Section>
 
         <Section title="6. Cookie等の利用">
@@ -58,30 +48,20 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="9. お問い合わせ窓口">
-          info@outin-plus.com
+          support@outin-plus.com
         </Section>
 
         <Section title="10. 改定">
           本ポリシーは必要に応じて改定することがあります。重要な変更がある場合は、本サービス上でお知らせします。
         </Section>
 
-        <div style={styles.bottomLinks}>
-          <Link href="/legal/terms" style={styles.link}>利用規約</Link>
-          <Link href="/legal/refund" style={styles.link}>返金ポリシー</Link>
-          <Link href="/legal/tokushoho" style={styles.link}>特定商取引法に基づく表記</Link>
-        </div>
+        <BottomLinks />
       </article>
     </main>
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section style={styles.section}>
       <h2 style={styles.sectionTitle}>{title}</h2>
@@ -90,38 +70,23 @@ function Section({
   )
 }
 
+function BottomLinks() {
+  return (
+    <div style={styles.bottomLinks}>
+      <Link href="/legal/terms" style={styles.link}>利用規約</Link>
+      <Link href="/legal/refund" style={styles.link}>返金ポリシー</Link>
+      <Link href="/legal/tokushoho" style={styles.link}>特定商取引法に基づく表記</Link>
+    </div>
+  )
+}
+
 const styles: Record<string, React.CSSProperties> = {
-  main: {
-    maxWidth: 860,
-    margin: "0 auto",
-    padding: "24px 14px 40px",
-  },
-  card: {
-    background: "#fff",
-    border: "1px solid rgba(17,24,39,.08)",
-    borderRadius: 8,
-    padding: 20,
-  },
-  title: {
-    margin: 0,
-    fontSize: 28,
-    fontWeight: 900,
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    margin: "0 0 8px",
-    fontSize: 18,
-    fontWeight: 900,
-  },
-  text: {
-    margin: 0,
-    fontSize: 14,
-    lineHeight: 1.9,
-    color: "#1f2937",
-    whiteSpace: "pre-wrap",
-  },
+  main: { maxWidth: 860, margin: "0 auto", padding: "24px 14px 40px" },
+  card: { background: "#fff", border: "1px solid rgba(17,24,39,.08)", borderRadius: 8, padding: 20 },
+  title: { margin: 0, fontSize: 28, fontWeight: 900 },
+  section: { marginTop: 20 },
+  sectionTitle: { margin: "0 0 8px", fontSize: 18, fontWeight: 900 },
+  text: { margin: 0, fontSize: 14, lineHeight: 1.9, color: "#1f2937", whiteSpace: "pre-wrap" },
   bottomLinks: {
     marginTop: 28,
     paddingTop: 16,
@@ -130,10 +95,5 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: "wrap",
     gap: 12,
   },
-  link: {
-    color: "#2563eb",
-    fontWeight: 800,
-    textDecoration: "none",
-    fontSize: 14,
-  },
+  link: { color: "#2563eb", fontWeight: 800, textDecoration: "none", fontSize: 14 },
 }

@@ -39,8 +39,8 @@ const FULL_ACCESS_PLAN: Body["plan"] = "7"
 
 const BASE_PRICE_TABLE: Record<DurationDays, number> = {
   30: 500,
-  90: 1200,
-  180: 2000,
+  90: 1500,
+  180: 3000,
 }
 
 const AI_ADDON_PRICE: Record<DurationDays, number> = {
@@ -90,7 +90,7 @@ function basicAuth(secretKey: string) {
 }
 
 async function createKomojuSession(
-  payload: Record<string, any>,
+  payload: Record<string, unknown>,
   secretKey: string
 ) {
   const res = await fetch("https://komoju.com/api/v1/sessions", {
@@ -141,7 +141,28 @@ export async function POST(req: Request) {
     const decoded = await adminAuth().verifyIdToken(body.idToken)
     const uid = decoded.uid
     const email = typeof decoded.email === "string" ? decoded.email : undefined
+    const name =
+      typeof decoded.name === "string" && decoded.name.trim()
+        ? decoded.name.trim()
+        : undefined
     const industry = isIndustryId(body.industry) ? body.industry : "manufacturing"
+
+    // 企業契約ユーザーは企業側で利用料を負担するため、決済を作成しない。
+    // UIを迂回してAPIを直接呼ばれた場合も、サーバー側で必ず拒否する。
+    const userRef = adminDb().collection("users").doc(uid)
+    const userSnap = await userRef.get()
+    const userData = userSnap.exists ? userSnap.data() ?? {} : {}
+    const isCompanyAccount =
+      userData.accountType === "company" ||
+      userData.billing?.accountType === "company" ||
+      userData.billing?.method === "company_contract"
+
+    if (isCompanyAccount) {
+      return NextResponse.json(
+        { error: "企業契約でご利用中のため、個人向けプランの購入は必要ありません。" },
+        { status: 403 }
+      )
+    }
 
     const baseAmount = BASE_PRICE_TABLE[body.durationDays]
     const aiAmount = body.addAiConversation ? AI_ADDON_PRICE[body.durationDays] : 0
@@ -154,29 +175,37 @@ export async function POST(req: Request) {
     const orderRef = adminDb().collection("paymentOrders").doc()
     const orderId = orderRef.id
     const paymentType = body.method === "convenience" ? "konbini" : "credit_card"
+    const appBaseUrl = appUrl.replace(/\/+$/, "")
+    const metadata: Record<string, string> = {
+      uid,
+      order_id: orderId,
+      plan: FULL_ACCESS_PLAN,
+      duration_days: String(body.durationDays),
+      method: body.method,
+      industry,
+      add_ai: String(!!body.addAiConversation),
+    }
 
-    const sessionPayload: Record<string, any> = {
+    const sessionPayload: Record<string, unknown> = {
+      mode: "payment",
       amount: total,
       currency: "JPY",
-      return_url: `${appUrl}/plans?checkout=success`,
-      external_order_num: orderId,
+      return_url: `${appBaseUrl}/plans?checkout=return`,
+      external_customer_id: uid,
       payment_types: [paymentType],
-      locale: "ja",
-      ...(email ? { customer_email: email } : {}),
+      default_locale: "ja",
+      payment_data: {
+        external_order_num: orderId,
+        capture: "auto",
+      },
+      metadata,
     }
+    if (email) sessionPayload.email = email
+    if (name) sessionPayload.name = name
 
-    let session: KomojuSessionResponse
-    try {
-      session = await createKomojuSession(sessionPayload, komojuSecretKey)
-    } catch (e: any) {
-      if (e?.status === 400) {
-        const fallbackPayload = { ...sessionPayload }
-        delete fallbackPayload.payment_types
-        session = await createKomojuSession(fallbackPayload, komojuSecretKey)
-      } else {
-        throw e
-      }
-    }
+    // Hosted Page sessions collect payment details and handle 3D Secure on KOMOJU.
+    // Keep payment_types aligned with the method selected in this app.
+    const session = await createKomojuSession(sessionPayload, komojuSecretKey)
 
     if (!session?.id || !session?.session_url) {
       throw new Error("KOMOJU session_url was not returned")
@@ -201,8 +230,7 @@ export async function POST(req: Request) {
       updatedAt: new Date(),
     })
 
-    const userSnap = await adminDb().collection("users").doc(uid).get()
-    const currentBilling = userSnap.exists ? userSnap.data()?.billing ?? {} : {}
+    const currentBilling = userData.billing ?? {}
     const keepActive =
       currentBilling?.status === "active" &&
       hasFuturePeriodEnd(currentBilling?.currentPeriodEnd)

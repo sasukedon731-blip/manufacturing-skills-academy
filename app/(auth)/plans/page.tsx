@@ -27,8 +27,8 @@ const DURATION_OPTIONS: Array<{
   note: string
 }> = [
   { days: 30, label: "1ヶ月プラン", price: 500, note: "まず試しやすい期間" },
-  { days: 90, label: "3ヶ月プラン", price: 1200, note: "続けて学ぶ方向け" },
-  { days: 180, label: "6ヶ月プラン", price: 2000, note: "じっくり定着させる方向け" },
+  { days: 90, label: "3ヶ月プラン", price: 1500, note: "続けて学ぶ方向け" },
+  { days: 180, label: "6ヶ月プラン", price: 3000, note: "じっくり定着させる方向け" },
 ]
 
 const AI_ADDON_PRICE: Record<DurationDays, number> = {
@@ -85,6 +85,7 @@ export default function PlansPage() {
   const [billingMethod, setBillingMethod] = useState<PaymentMethod>("convenience")
   const [addAiConversation, setAddAiConversation] = useState(false)
   const [aiConversationEnabled, setAiConversationEnabled] = useState(false)
+  const [isCompanyAccount, setIsCompanyAccount] = useState(false)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -111,6 +112,11 @@ export default function PlansPage() {
         const userSnap = await getDoc(doc(db, "users", uid))
         const userData = userSnap.exists() ? userSnap.data() : null
         setAiConversationEnabled(Boolean(userData?.billing?.aiConversationEnabled))
+        setIsCompanyAccount(
+          userData?.accountType === "company" ||
+          userData?.billing?.accountType === "company" ||
+          userData?.billing?.method === "company_contract"
+        )
       } catch (e) {
         console.error(e)
         setError("プラン情報の読み込みに失敗しました")
@@ -130,6 +136,10 @@ export default function PlansPage() {
 
   const startCheckout = async () => {
     if (!user) return
+    if (isCompanyAccount) {
+      setError("企業契約でご利用中のため、個人向けプランの購入は必要ありません。")
+      return
+    }
     setSaving(true)
     setError("")
 
@@ -197,6 +207,15 @@ export default function PlansPage() {
         </p>
       </section>
 
+      {isCompanyAccount ? (
+        <section style={{ ...styles.card, background: "#ecfdf5", borderColor: "rgba(16,185,129,.35)" }}>
+          <div style={styles.cardTitle}>企業契約でご利用中です</div>
+          <p style={styles.cardText}>
+            利用料金は企業契約に含まれているため、個人でプランを購入する必要はありません。
+          </p>
+        </section>
+      ) : null}
+
       {industry ? (
         <section style={{ ...styles.card, background: "#eff6ff", borderColor: "rgba(37,99,235,.28)" }}>
           <div style={styles.cardTitle}>選択中のカテゴリ</div>
@@ -206,7 +225,7 @@ export default function PlansPage() {
 
       {error ? <p style={styles.error}>{error}</p> : null}
 
-      <section style={styles.card}>
+      {!isCompanyAccount ? <section style={styles.card}>
         <div style={styles.sectionHead}>
           <div>
             <div style={styles.cardTitle}>利用期間</div>
@@ -233,9 +252,9 @@ export default function PlansPage() {
             )
           })}
         </div>
-      </section>
+      </section> : null}
 
-      <section style={styles.card}>
+      {!isCompanyAccount ? <section style={styles.card}>
         <div style={styles.cardTitle}>お支払い方法</div>
         <div style={styles.paymentGrid}>
           <PaymentOption
@@ -251,9 +270,9 @@ export default function PlansPage() {
             onChange={() => setBillingMethod("card")}
           />
         </div>
-      </section>
+      </section> : null}
 
-      <section style={{ ...styles.card, background: "#ecfdf5", borderColor: "rgba(16,185,129,.35)" }}>
+      {!isCompanyAccount ? <section style={{ ...styles.card, background: "#ecfdf5", borderColor: "rgba(16,185,129,.35)" }}>
         <div style={styles.cardTitle}>AIオプション</div>
         <p style={styles.cardText}>
           AI会話・AIスピーキングは基本学習プランには含まれません。
@@ -274,9 +293,9 @@ export default function PlansPage() {
         {aiConversationEnabled ? (
           <p style={styles.activeNote}>現在AIオプションは有効です。追加購入すると有効期限が延長されます。</p>
         ) : null}
-      </section>
+      </section> : null}
 
-      <section style={styles.totalCard}>
+      {!isCompanyAccount ? <section style={styles.totalCard}>
         <div style={styles.cardTitle}>お支払い合計</div>
         <div style={styles.totalRow}>
           <span>基本学習プラン（{selectedOption.label}）</span>
@@ -306,7 +325,7 @@ export default function PlansPage() {
         >
           {saving ? "決済ページへ移動中..." : "この内容で決済に進む"}
         </button>
-      </section>
+      </section> : null}
 
       <LegalFooter compact />
     </main>
