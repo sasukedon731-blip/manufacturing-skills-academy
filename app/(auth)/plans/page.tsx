@@ -8,6 +8,7 @@ import { doc, getDoc } from "firebase/firestore"
 import { auth, db } from "@/app/lib/firebase"
 import { quizzes } from "@/app/data/quizzes"
 import { type PlanId } from "@/app/lib/plan"
+import { isCompanyAccount as isCompanyUserAccount } from "@/app/lib/account"
 import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import AppHeader from "@/app/components/AppHeader"
 import LegalFooter from "@/app/components/LegalFooter"
@@ -112,11 +113,7 @@ export default function PlansPage() {
         const userSnap = await getDoc(doc(db, "users", uid))
         const userData = userSnap.exists() ? userSnap.data() : null
         setAiConversationEnabled(Boolean(userData?.billing?.aiConversationEnabled))
-        setIsCompanyAccount(
-          userData?.accountType === "company" ||
-          userData?.billing?.accountType === "company" ||
-          userData?.billing?.method === "company_contract"
-        )
+        setIsCompanyAccount(isCompanyUserAccount(userData))
       } catch (e) {
         console.error(e)
         setError("プラン情報の読み込みに失敗しました")
@@ -179,11 +176,15 @@ export default function PlansPage() {
     <main style={styles.main}>
       <AppHeader title="プラン" />
 
-      <CheckoutResultNotice
-        checkout={checkout}
-        showAiCta={aiConversationEnabled || addAiConversation}
-      />
-      <KonbiniGuideNotice />
+      {!isCompanyAccount ? (
+        <>
+          <CheckoutResultNotice
+            checkout={checkout}
+            showAiCta={aiConversationEnabled || addAiConversation}
+          />
+          <KonbiniGuideNotice />
+        </>
+      ) : null}
 
       <section style={styles.hero}>
         <div style={styles.eyebrow}>製造・日本語・ゲーム・AI</div>
@@ -199,10 +200,12 @@ export default function PlansPage() {
       </section>
 
       <section style={styles.card}>
-        <div style={styles.cardTitle}>現在のプラン</div>
+        <div style={styles.cardTitle}>
+          {isCompanyAccount ? "現在のご利用状況" : "現在のプラン"}
+        </div>
         <p style={styles.cardText}>
           {displayName ? `${displayName} さん：` : ""}
-          <b>{getPlanLabel(currentPlan)}</b>
+          <b>{isCompanyAccount ? "企業契約" : getPlanLabel(currentPlan)}</b>
           {aiConversationEnabled ? " / AIオプション有効" : ""}
         </p>
       </section>
@@ -211,12 +214,17 @@ export default function PlansPage() {
         <section style={{ ...styles.card, background: "#ecfdf5", borderColor: "rgba(16,185,129,.35)" }}>
           <div style={styles.cardTitle}>企業契約でご利用中です</div>
           <p style={styles.cardText}>
-            利用料金は企業契約に含まれているため、個人でプランを購入する必要はありません。
+            利用料金は企業契約に含まれています。個人でプランを購入する必要はありません。
           </p>
         </section>
       ) : null}
 
-      {industry ? (
+      {isCompanyAccount ? (
+        <section style={{ ...styles.card, background: "#eff6ff", borderColor: "rgba(37,99,235,.28)" }}>
+          <div style={styles.cardTitle}>利用中の教材</div>
+          <p style={styles.cardText}>製造分野のすべての対象教材をご利用いただけます。</p>
+        </section>
+      ) : industry ? (
         <section style={{ ...styles.card, background: "#eff6ff", borderColor: "rgba(37,99,235,.28)" }}>
           <div style={styles.cardTitle}>選択中のカテゴリ</div>
           <p style={styles.cardText}>{INDUSTRY_LABEL[industry]}向けの内容で申し込みます。</p>
@@ -327,7 +335,7 @@ export default function PlansPage() {
         </button>
       </section> : null}
 
-      <LegalFooter compact />
+      {!isCompanyAccount ? <LegalFooter compact /> : null}
     </main>
   )
 }

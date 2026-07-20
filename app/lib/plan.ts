@@ -1,5 +1,6 @@
 import { quizzes } from "@/app/data/quizzes"
 import type { QuizType } from "@/app/data/types"
+import { isCompanyAccount } from "@/app/lib/account"
 
 export type PlanId = "trial" | "free" | "3" | "5" | "7"
 export type SelectLimit = number | "ALL"
@@ -51,7 +52,7 @@ export type AccountType = "personal" | "company"
 
 export function getBillingStatus(userDoc: any): BillingStatus {
   if (!userDoc) return "inactive"
-  if (userDoc.accountType === "company" || !!userDoc.companyCode) return "active"
+  if (isCompanyAccount(userDoc)) return "active"
 
   const s = userDoc?.billing?.status
   if (s === "pending" || s === "active" || s === "past_due" || s === "canceled") return s
@@ -76,7 +77,7 @@ export function isAccessActive(userDoc: any): boolean {
   if (!userDoc) return false
 
   // 企業コード登録ユーザーは企業契約扱い。
-  if (userDoc.accountType === "company" || !!userDoc.companyCode) return true
+  if (isCompanyAccount(userDoc)) return true
 
   // 有料billingがある場合。
   if (userDoc.billing?.status) {

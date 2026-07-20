@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server"
 import { adminAuth, adminDb } from "@/app/lib/firebaseAdmin"
 import { setUserBillingMerge } from "@/app/lib/billingServer"
+import { isCompanyAccount } from "@/app/lib/account"
 
 export const runtime = "nodejs"
 
@@ -152,12 +153,7 @@ export async function POST(req: Request) {
     const userRef = adminDb().collection("users").doc(uid)
     const userSnap = await userRef.get()
     const userData = userSnap.exists ? userSnap.data() ?? {} : {}
-    const isCompanyAccount =
-      userData.accountType === "company" ||
-      userData.billing?.accountType === "company" ||
-      userData.billing?.method === "company_contract"
-
-    if (isCompanyAccount) {
+    if (isCompanyAccount(userData)) {
       return NextResponse.json(
         { error: "企業契約でご利用中のため、個人向けプランの購入は必要ありません。" },
         { status: 403 }
