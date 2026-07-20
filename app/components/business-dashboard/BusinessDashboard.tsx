@@ -87,6 +87,7 @@ export default function BusinessDashboard({
   const [reloadKey, setReloadKey] = useState(0)
   const [company, setCompany] = useState<AnyRecord>({})
   const [code, setCode] = useState("")
+  const [role, setRole] = useState("")
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState("すべて")
   const [sort, setSort] = useState("last")
@@ -98,6 +99,7 @@ export default function BusinessDashboard({
     setLoading(true)
     setLoadError(null)
     setCompanyMissing(false)
+    setRole("")
 
     return onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -112,11 +114,15 @@ export default function BusinessDashboard({
         const me = mySnapshot.data() as AnyRecord
         const role = String(me.role ?? "")
         if (!["admin", "company_admin"].includes(role)) throw Error("閲覧権限がありません。")
+        setRole(role)
 
         const companyCode = String(me[companyField] ?? "")
-        if (role !== "admin" && !companyCode) throw Error("企業コードがありません。")
-
         setCode(companyCode)
+        if (role === "company_admin" && !companyCode) {
+          setCompany({ name: me.companyName })
+          setRows([])
+          return
+        }
         if (companyCode) {
           const companySnapshot = await getDoc(doc(db, "companies", companyCode))
           setCompanyMissing(!companySnapshot.exists())
@@ -324,6 +330,14 @@ export default function BusinessDashboard({
             企業向け学習管理画面
           </small>
           <b style={styles.app}>{appName}</b>
+          {role === "company_admin" && (
+            <CompanyCodeCard
+              companyName={String(company.name ?? company.companyName ?? "")}
+              code={code}
+              copied={copied}
+              onCopy={copyCode}
+            />
+          )}
           <a href="/home" style={{ color: "white", padding: 10 }}>
             アプリへ戻る
           </a>
@@ -543,6 +557,37 @@ function InfoCard({ title, body }: { title: string; body: string }) {
   )
 }
 
+function CompanyCodeCard({
+  companyName,
+  code,
+  copied,
+  onCopy,
+}: {
+  companyName: string
+  code: string
+  copied: boolean
+  onCopy: () => void
+}) {
+  return (
+    <section style={styles.companyCodeCard} aria-label="企業情報">
+      {companyName && <b style={styles.companyName}>{companyName}</b>}
+      <span style={styles.companyCodeLabel}>企業コード</span>
+      <code style={styles.companyCode}>
+        {code || "企業コードが登録されていません"}
+      </code>
+      <button
+        type="button"
+        onClick={onCopy}
+        disabled={!code}
+        aria-label={code ? "企業コードをコピー" : "企業コードが登録されていません"}
+        style={styles.copyButton}
+      >
+        <span aria-live="polite">{copied ? "コピー済み" : "コピー"}</span>
+      </button>
+    </section>
+  )
+}
+
 function CourseProgress({ stats }: { stats: CourseStat[] }) {
   if (!stats.length) return null
   return (
@@ -655,6 +700,41 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: "1px solid #ffffff22",
   },
   app: { padding: "15px 0" },
+  companyCodeCard: {
+    display: "grid",
+    gap: 5,
+    minWidth: 0,
+    padding: 10,
+    border: "1px solid #ffffff2b",
+    borderRadius: 10,
+    background: "#ffffff10",
+  },
+  companyName: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    fontSize: 13,
+  },
+  companyCodeLabel: {
+    color: "#aebed4",
+    fontSize: 11,
+  },
+  companyCode: {
+    maxWidth: "100%",
+    color: "white",
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    fontSize: 12,
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+  },
+  copyButton: {
+    justifySelf: "start",
+    padding: "6px 10px",
+    border: "1px solid #ffffff3d",
+    borderRadius: 8,
+    background: "#ffffff18",
+    color: "white",
+  },
   nav: {
     flexShrink: 0,
     padding: 12,
@@ -743,6 +823,9 @@ const responsive = `
     .bdSide{padding-top:12px!important}
     .bdSide h2{font-size:18px;margin:0}
     .bdSide small{font-size:11px}
+    .bdSide>div:first-child{gap:4px!important}
+    .bdSide>div:first-child>b{padding-block:4px!important}
+    .bdSide>div:first-child section{padding:7px!important;gap:3px!important}
     .bdSide nav{padding-block:4px!important;gap:4px!important}
     .bdSide nav button{padding-block:9px!important}
   }
