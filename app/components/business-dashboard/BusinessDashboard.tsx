@@ -19,9 +19,18 @@ type LearnerRow = {
   status: string
   course: string
 }
+type CourseStat = {
+  course: string
+  learners: number
+  studyCount: number
+  averageScore: number | null
+  studying: number
+  followUp: number
+  notStarted: number
+}
 type LoadError = "permission" | "general" | null
 
-const tabs = ["Dashboard", "Learners", "Courses", "Analytics", "Reports", "Company"] as const
+const tabs = ["Dashboard", "Learners", "Analytics", "Reports", "Company"] as const
 
 const toDate = (value: any): Date | null => {
   if (!value) return null
@@ -224,6 +233,33 @@ export default function BusinessDashboard({
     [rows, search, filter, sort],
   )
   const averageScores = rows.map((row) => row.score).filter((value): value is number => value != null)
+  const courseStats = useMemo<CourseStat[]>(() => {
+    const grouped = new Map<string, LearnerRow[]>()
+    for (const row of rows) {
+      const learners = grouped.get(row.course) ?? []
+      learners.push(row)
+      grouped.set(row.course, learners)
+    }
+
+    return [...grouped.entries()]
+      .map(([course, learners]) => {
+        const scores = learners
+          .map((learner) => learner.score)
+          .filter((value): value is number => value != null)
+        return {
+          course,
+          learners: learners.length,
+          studyCount: learners.reduce((total, learner) => total + learner.count, 0),
+          averageScore: scores.length
+            ? scores.reduce((total, value) => total + value, 0) / scores.length
+            : null,
+          studying: learners.filter((learner) => learner.status === "学習中").length,
+          followUp: learners.filter((learner) => learner.status === "要フォロー").length,
+          notStarted: learners.filter((learner) => learner.status === "未学習").length,
+        }
+      })
+      .sort((a, b) => b.studyCount - a.studyCount || a.course.localeCompare(b.course, "ja"))
+  }, [rows])
 
   const exportCsv = () => {
     const data = [
@@ -350,23 +386,29 @@ export default function BusinessDashboard({
               {notice && <div style={styles.info}>{notice}</div>}
 
               {tab === "Dashboard" && (
-                <div style={styles.grid}>
-                  <Card label="登録学習者数" value={rows.length} />
-                  <Card label="学習中" value={rows.filter((row) => row.status === "学習中").length} />
-                  <Card
-                    label="要フォロー"
-                    value={rows.filter((row) => row.status === "要フォロー").length}
-                  />
-                  <Card
-                    label="平均正答率"
-                    value={percent(
-                      averageScores.length
-                        ? averageScores.reduce((total, value) => total + value, 0) /
-                            averageScores.length
-                        : null,
-                    )}
-                  />
-                </div>
+                <>
+                  <div style={styles.grid}>
+                    <Card label="登録学習者数" value={rows.length} />
+                    <Card
+                      label="学習中"
+                      value={rows.filter((row) => row.status === "学習中").length}
+                    />
+                    <Card
+                      label="要フォロー"
+                      value={rows.filter((row) => row.status === "要フォロー").length}
+                    />
+                    <Card
+                      label="平均正答率"
+                      value={percent(
+                        averageScores.length
+                          ? averageScores.reduce((total, value) => total + value, 0) /
+                              averageScores.length
+                          : null,
+                      )}
+                    />
+                  </div>
+                  <CourseProgress stats={courseStats} />
+                </>
               )}
 
               {tab === "Learners" && (
@@ -430,23 +472,20 @@ export default function BusinessDashboard({
                 </>
               )}
 
-              {tab === "Courses" && (
-                <div style={styles.card}>
-                  実データに存在する教材:{" "}
-                  {[...new Set(rows.map((row) => row.course))].join("、") || "集計データなし"}
-                </div>
-              )}
               {tab === "Analytics" && (
-                <div style={styles.card}>
-                  平均正答率{" "}
-                  {percent(
-                    averageScores.length
-                      ? averageScores.reduce((total, value) => total + value, 0) /
-                          averageScores.length
-                      : null,
-                  )}{" "}
-                  ・ 学習中 {rows.filter((row) => row.status === "学習中").length}名
-                </div>
+                <>
+                  <div style={styles.card}>
+                    全体平均正答率{" "}
+                    {percent(
+                      averageScores.length
+                        ? averageScores.reduce((total, value) => total + value, 0) /
+                            averageScores.length
+                        : null,
+                    )}{" "}
+                    ・ 学習中 {rows.filter((row) => row.status === "学習中").length}名
+                  </div>
+                  <CourseAnalytics stats={courseStats} />
+                </>
               )}
               {tab === "Reports" && (
                 <div style={styles.card}>
@@ -500,6 +539,64 @@ function InfoCard({ title, body }: { title: string; body: string }) {
     <section style={styles.info}>
       <b>{title}</b>
       <p>{body}</p>
+    </section>
+  )
+}
+
+function CourseProgress({ stats }: { stats: CourseStat[] }) {
+  if (!stats.length) return null
+  return (
+    <section style={styles.card}>
+      <h2>教材別進捗</h2>
+      <div style={styles.courseGrid}>
+        {stats.map((stat) => (
+          <article key={stat.course} style={styles.courseItem}>
+            <b>{stat.course}</b>
+            <p>
+              学習中 {stat.studying}名 ・ 要フォロー {stat.followUp}名 ・ 未学習{" "}
+              {stat.notStarted}名
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function CourseAnalytics({ stats }: { stats: CourseStat[] }) {
+  if (!stats.length) return null
+  return (
+    <section style={styles.card}>
+      <h2>教材別分析</h2>
+      <div style={styles.table}>
+        <table>
+          <thead>
+            <tr>
+              <th>教材</th>
+              <th>学習者数</th>
+              <th>学習回数</th>
+              <th>平均正答率</th>
+              <th>進捗</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.map((stat) => (
+              <tr key={stat.course}>
+                <td>
+                  <b>{stat.course}</b>
+                </td>
+                <td>{stat.learners}</td>
+                <td>{stat.studyCount}</td>
+                <td>{percent(stat.averageScore)}</td>
+                <td>
+                  学習中 {stat.studying} / 要フォロー {stat.followUp} / 未学習{" "}
+                  {stat.notStarted}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }
@@ -614,6 +711,17 @@ const styles: Record<string, React.CSSProperties> = {
   number: { display: "block", fontSize: 30, marginTop: 10 },
   tools: { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 15 },
   table: { overflowX: "auto", background: "white", borderRadius: 16 },
+  courseGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
+    gap: 12,
+  },
+  courseItem: {
+    padding: 16,
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+  },
   center: { minHeight: "100dvh", display: "grid", placeItems: "center" },
 }
 
