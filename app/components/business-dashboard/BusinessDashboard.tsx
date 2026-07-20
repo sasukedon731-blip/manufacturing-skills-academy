@@ -1,45 +1,646 @@
-
-
-
-
-
-
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
-import {useEffect,useMemo,useState} from "react"
-import {useRouter} from "next/navigation"
-import {onAuthStateChanged,signOut} from "firebase/auth"
-import {collection,doc,getDoc,getDocs,query,where} from "firebase/firestore"
-import {auth,db} from "@/app/lib/firebase"
-import {getQuizDef} from "@/app/data/quizCatalog"
-type A=Record<string,any>
-type R={id:string;name:string;email:string;count:number;score:number|null;last:Date|null;status:string;course:string}
-const tabs=["Dashboard","Learners","Courses","Analytics","Reports","Company"] as const
-const d=(v:any):Date|null=>{if(!v)return null;const x=typeof v.toDate==="function"?v.toDate():v.seconds?new Date(v.seconds*1000):typeof v==="number"&&v<100000000000?new Date(v*1000):new Date(v);return Number.isNaN(x.getTime())||x.getTime()>Date.now()+86400000?null:x}
-const score=(x:A)=>{if(Number.isFinite(x.accuracy))return x.accuracy<=1?x.accuracy*100:Math.min(100,Math.max(0,x.accuracy));const c=Number(x.correctCount??x.score),t=Number(x.totalQuestions??x.total??x.answeredCount);return Number.isFinite(c)&&Number.isFinite(t)&&t>0?Math.min(100,Math.max(0,c/t*100)):null}
-const pct=(x:number|null)=>x==null?"—":Math.round(x)+"%"
-const fmt=(x:Date|null)=>x?x.toLocaleDateString("ja-JP"):"—"
-const courseLabel=(id:string)=>{try{return getQuizDef(id)?.title??id}catch{return id||"教材未設定"}}
-const jstDay=(x:Date)=>Math.floor((x.getTime()+32400000)/86400000)
-export default function BusinessDashboard({appName,loginHref="/company/login",companyField="companyCode"}:{appName:string;loginHref?:string;companyField?:"companyCode"|"companyId"}){
- const router=useRouter(),[tab,setTab]=useState<(typeof tabs)[number]>("Dashboard"),[rows,setRows]=useState<R[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(""),[company,setCompany]=useState<A>({}),[code,setCode]=useState(""),[search,setSearch]=useState(""),[filter,setFilter]=useState("すべて"),[sort,setSort]=useState("last"),[menu,setMenu]=useState(false),[copied,setCopied]=useState(false)
- useEffect(()=>onAuthStateChanged(auth,async user=>{if(!user){router.replace(loginHref);return}try{const ms=await getDoc(doc(db,"users",user.uid));if(!ms.exists())throw Error("管理者情報が見つかりません。");const me=ms.data() as A,role=String(me.role??"");if(!["admin","company_admin"].includes(role))throw Error("閲覧権限がありません。");const cc=String(me[companyField]??"");if(role!=="admin"&&!cc)throw Error("企業コードがありません。");setCode(cc);if(cc){const cs=await getDoc(doc(db,"companies",cc));setCompany(cs.exists()?cs.data():{name:me.companyName})}const users=collection(db,"users"),snap=role==="admin"&&!cc?await getDocs(users):await getDocs(query(users,where(companyField,"==",cc))),people=snap.docs.map(x=>({id:x.id,...x.data()} as A)).filter(x=>x.id!==user.uid&&!String(x.role??"").includes("admin"));setRows(await Promise.all(people.map(async p=>{const [rs,ps]=await Promise.all([getDocs(collection(db,"users",p.id,"results")),getDocs(collection(db,"users",p.id,"progress"))]),results=rs.docs.map(x=>x.data() as A),progress=ps.docs.map(x=>({id:x.id,...x.data()} as A)),vals=results.map(score).filter((x):x is number=>x!=null),dates=[...results.map(x=>d(x.completedAt??x.createdAt??x.lastStudyAt??x.updatedAt)),...progress.map(x=>d(x.lastStudyAt??x.lastStudiedAt??x.completedAt??x.updatedAt??x.lastStudyDate))].filter((x):x is Date=>!!x),last=dates.length?new Date(Math.max(...dates.map(x=>x.getTime()))):null,count=results.length||progress.reduce((n,x)=>n+Number(x.totalSessions??0),0);return{id:p.id,name:String(p.displayName??p.name??"名前未設定"),email:String(p.email??""),count,score:vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null,last,status:!count?"未学習":last&&jstDay(new Date())-jstDay(last)>=7?"要フォロー":"学習中",course:courseLabel(String(results[0]?.quizType??results[0]?.courseId??results[0]?.materialId??progress[0]?.quizType??progress[0]?.courseId??progress[0]?.materialId??progress[0]?.id??""))}})))}catch(e){setError(e instanceof Error?e.message:"取得に失敗しました")}finally{setLoading(false)}}),[router,loginHref,companyField])
- const shown=useMemo(()=>rows.filter(x=>(filter==="すべて"||x.status===filter)&&(x.name+" "+x.email).toLowerCase().includes(search.toLowerCase())).sort((a,b)=>sort==="name"?a.name.localeCompare(b.name,"ja"):sort==="count"?b.count-a.count:sort==="score"?(b.score??-1)-(a.score??-1):(b.last?.getTime()??0)-(a.last?.getTime()??0)),[rows,search,filter,sort]),avg=rows.map(x=>x.score).filter((x):x is number=>x!=null)
- const exportCsv=()=>{const data=[["氏名","メール","状態","学習回数","平均正答率","最終学習日","教材"],...shown.map(x=>[x.name,x.email,x.status,x.count,pct(x.score),fmt(x.last),x.course])],safe=(v:unknown)=>{const s=String(v);return '"'+(["=","+","-","@"].includes(s.charAt(0))?"'":"")+s.replaceAll('"','""')+'"'},blob=new Blob(["\uFEFF"+data.map(x=>x.map(safe).join(",")).join("\r\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=appName+"-learners-"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href)}
- const copyCode=async()=>{if(!code)return;try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(code);else{const t=document.createElement("textarea");t.value=code;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()}setCopied(true);window.setTimeout(()=>setCopied(false),1800)}catch{setError("企業コードをコピーできませんでした。手動で選択してコピーしてください。")}}
- if(loading)return <main style={s.center}>読み込み中…</main>
- return <div style={s.shell}><style>{responsive}</style><aside className={menu?"bdSide open":"bdSide"} style={s.side}><h2>OutIN Academy</h2><small>Business Dashboard<br/>企業向け学習管理画面</small><b style={s.app}>{appName}</b><a href="/home" style={{color:"white",padding:10}}>アプリへ戻る</a>{tabs.map(x=><button key={x} onClick={()=>setTab(x)} style={tab===x?s.on:s.nav}>{x}</button>)}<button onClick={()=>signOut(auth)} style={s.nav}>ログアウト</button></aside>{menu&&<button className="bdScrim" onClick={()=>setMenu(false)} aria-label="メニューを閉じる"/>}<main className="bdMain" style={s.main}><header style={s.head}><button className="bdHamb" onClick={()=>setMenu(true)} aria-label="メニューを開く">☰</button><b>{tab}</b><span>{company.name??company.companyName??code}</span></header><div style={s.content}>{error?<div style={s.card}>{error}</div>:<><h1>{tab}</h1>{tab==="Dashboard"&&<div style={s.grid}><Card a="登録学習者数" b={rows.length}/><Card a="学習中" b={rows.filter(x=>x.status==="学習中").length}/><Card a="要フォロー" b={rows.filter(x=>x.status==="要フォロー").length}/><Card a="平均正答率" b={pct(avg.length?avg.reduce((a,b)=>a+b,0)/avg.length:null)}/></div>}{tab==="Learners"&&<><div style={s.tools}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="氏名・メールで検索" aria-label="氏名またはメールで検索"/><select value={filter} onChange={e=>setFilter(e.target.value)} aria-label="状態フィルター">{["すべて","未学習","学習中","要フォロー"].map(x=><option key={x}>{x}</option>)}</select><select value={sort} onChange={e=>setSort(e.target.value)} aria-label="並び替え"><option value="last">最終学習日</option><option value="name">氏名</option><option value="count">学習回数</option><option value="score">平均正答率</option></select><button onClick={exportCsv}>CSV出力</button></div><div style={s.table}><table><thead><tr>{["氏名","状態","学習回数","平均正答率","最終学習日","教材"].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{shown.map(x=><tr key={x.id}><td><b>{x.name}</b><small>{x.email}</small></td><td>{x.status}</td><td>{x.count}</td><td>{pct(x.score)}</td><td>{fmt(x.last)}</td><td>{x.course}</td></tr>)}</tbody></table></div></>}{tab==="Courses"&&<div style={s.card}>実データに存在する教材: {[...new Set(rows.map(x=>x.course))].join("、")||"集計データなし"}</div>}{tab==="Analytics"&&<div style={s.card}>平均正答率 {pct(avg.length?avg.reduce((a,b)=>a+b,0)/avg.length:null)} ／ 学習中 {rows.filter(x=>x.status==="学習中").length}名</div>}{tab==="Reports"&&<div style={s.card}><p>出力対象 {shown.length}件</p><button onClick={exportCsv}>学習者一覧CSVを出力</button><p>PDFレポートは準備中です。</p></div>}{tab==="Company"&&<div style={s.card}><p>会社名: {String(company.name??company.companyName??"—")}</p><p>企業コード: {code||"—"}</p><p>契約状態: {String(company.status??"有効")}</p><p>登録学習者数: {rows.length}名</p><p>利用中のアプリ: {appName}</p><button onClick={copyCode} disabled={!code}>{copied?"コピーしました":"企業コードをコピー"}</button></div>}</>}</div></main></div>
+
+import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { onAuthStateChanged, signOut } from "firebase/auth"
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore"
+import { auth, db } from "@/app/lib/firebase"
+import { getQuizDef } from "@/app/data/quizCatalog"
+
+type AnyRecord = Record<string, any>
+type LearnerRow = {
+  id: string
+  name: string
+  email: string
+  count: number
+  score: number | null
+  last: Date | null
+  status: string
+  course: string
 }
-const Card=({a,b}:{a:string;b:any})=><article style={s.card}><span>{a}</span><strong style={s.num}>{b}</strong></article>
-const s:Record<string,React.CSSProperties>={shell:{minHeight:"100vh",background:"#f5f7fb",color:"#10213b",fontFamily:"system-ui"},side:{position:"fixed",inset:"0 auto 0 0",width:250,padding:22,background:"#102342",color:"white",display:"flex",flexDirection:"column",gap:10},app:{padding:"15px 0"},nav:{padding:12,border:0,borderRadius:10,background:"transparent",color:"#ccd7e8",textAlign:"left"},on:{padding:12,border:0,borderRadius:10,background:"white",color:"#102342",textAlign:"left"},main:{marginLeft:250},head:{height:70,padding:"0 28px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"white"},content:{maxWidth:1200,margin:"auto",padding:28},grid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:15},card:{padding:22,background:"white",border:"1px solid #e2e8f0",borderRadius:18,marginBottom:15},num:{display:"block",fontSize:30,marginTop:10},tools:{display:"flex",gap:10,marginBottom:15},table:{overflowX:"auto",background:"white",borderRadius:16},center:{minHeight:"100vh",display:"grid",placeItems:"center"}}
+type LoadError = "permission" | "general" | null
 
+const tabs = ["Dashboard", "Learners", "Courses", "Analytics", "Reports", "Company"] as const
 
+const toDate = (value: any): Date | null => {
+  if (!value) return null
+  const parsed =
+    typeof value.toDate === "function"
+      ? value.toDate()
+      : value.seconds
+        ? new Date(value.seconds * 1000)
+        : typeof value === "number" && value < 100000000000
+          ? new Date(value * 1000)
+          : new Date(value)
+  return Number.isNaN(parsed.getTime()) || parsed.getTime() > Date.now() + 86400000 ? null : parsed
+}
 
+const score = (result: AnyRecord) => {
+  if (Number.isFinite(result.accuracy)) {
+    return result.accuracy <= 1
+      ? result.accuracy * 100
+      : Math.min(100, Math.max(0, result.accuracy))
+  }
+  const correct = Number(result.correctCount ?? result.score)
+  const total = Number(result.totalQuestions ?? result.total ?? result.answeredCount)
+  return Number.isFinite(correct) && Number.isFinite(total) && total > 0
+    ? Math.min(100, Math.max(0, (correct / total) * 100))
+    : null
+}
 
-const responsive=`.bdHamb,.bdScrim{display:none}@media(max-width:800px){.bdSide{transform:translateX(-105%);transition:transform .2s}.bdSide.open{transform:none}.bdMain{margin-left:0!important}.bdHamb{display:block}.bdScrim{display:block;position:fixed;inset:0;border:0;border-radius:0;background:#09142688;z-index:20}}@media(max-width:430px){.bdMain header{padding:0 12px!important}.bdMain>div{padding:18px!important}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ff9a65;outline-offset:2px}`
+const percent = (value: number | null) => (value == null ? "—" : `${Math.round(value)}%`)
+const formatDate = (value: Date | null) => (value ? value.toLocaleDateString("ja-JP") : "—")
+const courseLabel = (id: string) => {
+  try {
+    return getQuizDef(id)?.title ?? id
+  } catch {
+    return id || "教材未設定"
+  }
+}
+const jstDay = (value: Date) => Math.floor((value.getTime() + 32400000) / 86400000)
 
+export default function BusinessDashboard({
+  appName,
+  loginHref = "/company/login",
+  companyField = "companyCode",
+}: {
+  appName: string
+  loginHref?: string
+  companyField?: "companyCode" | "companyId"
+}) {
+  const router = useRouter()
+  const [tab, setTab] = useState<(typeof tabs)[number]>("Dashboard")
+  const [rows, setRows] = useState<LearnerRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<LoadError>(null)
+  const [companyMissing, setCompanyMissing] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [company, setCompany] = useState<AnyRecord>({})
+  const [code, setCode] = useState("")
+  const [search, setSearch] = useState("")
+  const [filter, setFilter] = useState("すべて")
+  const [sort, setSort] = useState("last")
+  const [menu, setMenu] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [notice, setNotice] = useState("")
 
+  useEffect(() => {
+    setLoading(true)
+    setLoadError(null)
+    setCompanyMissing(false)
 
+    return onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        router.replace(loginHref)
+        return
+      }
 
+      try {
+        const mySnapshot = await getDoc(doc(db, "users", user.uid))
+        if (!mySnapshot.exists()) throw Error("管理者情報が見つかりません。")
 
+        const me = mySnapshot.data() as AnyRecord
+        const role = String(me.role ?? "")
+        if (!["admin", "company_admin"].includes(role)) throw Error("閲覧権限がありません。")
+
+        const companyCode = String(me[companyField] ?? "")
+        if (role !== "admin" && !companyCode) throw Error("企業コードがありません。")
+
+        setCode(companyCode)
+        if (companyCode) {
+          const companySnapshot = await getDoc(doc(db, "companies", companyCode))
+          setCompanyMissing(!companySnapshot.exists())
+          setCompany(companySnapshot.exists() ? companySnapshot.data() : { name: me.companyName })
+        }
+
+        const users = collection(db, "users")
+        const usersSnapshot =
+          role === "admin" && !companyCode
+            ? await getDocs(users)
+            : await getDocs(query(users, where(companyField, "==", companyCode)))
+
+        const people = usersSnapshot.docs
+          .map((snapshot) => ({ id: snapshot.id, ...snapshot.data() }) as AnyRecord)
+          .filter((person) => person.id !== user.uid && !String(person.role ?? "").includes("admin"))
+
+        setRows(
+          await Promise.all(
+            people.map(async (person) => {
+              const [resultsSnapshot, progressSnapshot] = await Promise.all([
+                getDocs(collection(db, "users", person.id, "results")),
+                getDocs(collection(db, "users", person.id, "progress")),
+              ])
+              const results = resultsSnapshot.docs.map((snapshot) => snapshot.data() as AnyRecord)
+              const progress = progressSnapshot.docs.map(
+                (snapshot) => ({ id: snapshot.id, ...snapshot.data() }) as AnyRecord,
+              )
+              const scores = results.map(score).filter((value): value is number => value != null)
+              const dates = [
+                ...results.map((result) =>
+                  toDate(result.completedAt ?? result.createdAt ?? result.lastStudyAt ?? result.updatedAt),
+                ),
+                ...progress.map((item) =>
+                  toDate(
+                    item.lastStudyAt ??
+                      item.lastStudiedAt ??
+                      item.completedAt ??
+                      item.updatedAt ??
+                      item.lastStudyDate,
+                  ),
+                ),
+              ].filter((value): value is Date => Boolean(value))
+              const last = dates.length
+                ? new Date(Math.max(...dates.map((value) => value.getTime())))
+                : null
+              const count =
+                results.length ||
+                progress.reduce((total, item) => total + Number(item.totalSessions ?? 0), 0)
+
+              return {
+                id: person.id,
+                name: String(person.displayName ?? person.name ?? "名前未設定"),
+                email: String(person.email ?? ""),
+                count,
+                score: scores.length
+                  ? scores.reduce((total, value) => total + value, 0) / scores.length
+                  : null,
+                last,
+                status: !count
+                  ? "未学習"
+                  : last && jstDay(new Date()) - jstDay(last) >= 7
+                    ? "要フォロー"
+                    : "学習中",
+                course: courseLabel(
+                  String(
+                    results[0]?.quizType ??
+                      results[0]?.courseId ??
+                      results[0]?.materialId ??
+                      progress[0]?.quizType ??
+                      progress[0]?.courseId ??
+                      progress[0]?.materialId ??
+                      progress[0]?.id ??
+                      "",
+                  ),
+                ),
+              }
+            }),
+          ),
+        )
+      } catch (error) {
+        console.error("Business Dashboard data load failed", error)
+        const firebaseCode =
+          typeof error === "object" && error !== null && "code" in error
+            ? String((error as { code?: unknown }).code)
+            : ""
+        setLoadError(
+          firebaseCode === "permission-denied" || firebaseCode === "firestore/permission-denied"
+            ? "permission"
+            : "general",
+        )
+      } finally {
+        setLoading(false)
+      }
+    })
+  }, [router, loginHref, companyField, reloadKey])
+
+  const shown = useMemo(
+    () =>
+      rows
+        .filter(
+          (row) =>
+            (filter === "すべて" || row.status === filter) &&
+            `${row.name} ${row.email}`.toLowerCase().includes(search.toLowerCase()),
+        )
+        .sort((a, b) =>
+          sort === "name"
+            ? a.name.localeCompare(b.name, "ja")
+            : sort === "count"
+              ? b.count - a.count
+              : sort === "score"
+                ? (b.score ?? -1) - (a.score ?? -1)
+                : (b.last?.getTime() ?? 0) - (a.last?.getTime() ?? 0),
+        ),
+    [rows, search, filter, sort],
+  )
+  const averageScores = rows.map((row) => row.score).filter((value): value is number => value != null)
+
+  const exportCsv = () => {
+    const data = [
+      ["氏名", "メール", "状態", "学習回数", "平均正答率", "最終学習日", "教材"],
+      ...shown.map((row) => [
+        row.name,
+        row.email,
+        row.status,
+        row.count,
+        percent(row.score),
+        formatDate(row.last),
+        row.course,
+      ]),
+    ]
+    const safe = (value: unknown) => {
+      const text = String(value)
+      return `"${["=", "+", "-", "@"].includes(text.charAt(0)) ? "'" : ""}${text.replaceAll('"', '""')}"`
+    }
+    const blob = new Blob(
+      [`\uFEFF${data.map((row) => row.map(safe).join(",")).join("\r\n")}`],
+      { type: "text/csv" },
+    )
+    const anchor = document.createElement("a")
+    anchor.href = URL.createObjectURL(blob)
+    anchor.download = `${appName}-learners-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.click()
+    URL.revokeObjectURL(anchor.href)
+  }
+
+  const copyCode = async () => {
+    if (!code) return
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code)
+      } else {
+        const textarea = document.createElement("textarea")
+        textarea.value = code
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand("copy")
+        textarea.remove()
+      }
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
+    } catch (error) {
+      console.error("Company code copy failed", error)
+      setNotice("企業コードをコピーできませんでした。手動で選択してコピーしてください。")
+    }
+  }
+
+  if (loading) return <main style={styles.center}>読み込み中…</main>
+
+  return (
+    <div style={styles.shell}>
+      <style>{responsive}</style>
+      <aside className={menu ? "bdSide open" : "bdSide"} style={styles.side}>
+        <div style={styles.sideTop}>
+          <h2>OutIN Academy</h2>
+          <small>
+            Business Dashboard
+            <br />
+            企業向け学習管理画面
+          </small>
+          <b style={styles.app}>{appName}</b>
+          <a href="/home" style={{ color: "white", padding: 10 }}>
+            アプリへ戻る
+          </a>
+        </div>
+        <nav style={styles.sideNav} aria-label="Business Dashboard">
+          {tabs.map((item) => (
+            <button
+              key={item}
+              onClick={() => {
+                setTab(item)
+                setMenu(false)
+              }}
+              style={tab === item ? styles.activeNav : styles.nav}
+            >
+              {item}
+            </button>
+          ))}
+        </nav>
+        <div style={styles.logoutArea}>
+          <button onClick={() => signOut(auth)} style={styles.nav}>
+            ログアウト
+          </button>
+        </div>
+      </aside>
+
+      {menu && (
+        <button
+          className="bdScrim"
+          onClick={() => setMenu(false)}
+          aria-label="メニューを閉じる"
+        />
+      )}
+
+      <main className="bdMain" style={styles.main}>
+        <header style={styles.header}>
+          <button className="bdHamb" onClick={() => setMenu(true)} aria-label="メニューを開く">
+            ☰
+          </button>
+          <b>{tab}</b>
+          <span>{company.name ?? company.companyName ?? code}</span>
+        </header>
+        <div style={styles.content}>
+          {loadError ? (
+            <LoadErrorCard kind={loadError} onRetry={() => setReloadKey((value) => value + 1)} />
+          ) : (
+            <>
+              <h1>{tab}</h1>
+              {companyMissing && (
+                <InfoCard
+                  title="企業情報が登録されていません"
+                  body="企業コードに対応する企業情報を確認してください。"
+                />
+              )}
+              {!companyMissing && rows.length === 0 && (
+                <InfoCard
+                  title="表示できる学習者データはありません"
+                  body="学習者が登録されると、ここに学習状況が表示されます。"
+                />
+              )}
+              {notice && <div style={styles.info}>{notice}</div>}
+
+              {tab === "Dashboard" && (
+                <div style={styles.grid}>
+                  <Card label="登録学習者数" value={rows.length} />
+                  <Card label="学習中" value={rows.filter((row) => row.status === "学習中").length} />
+                  <Card
+                    label="要フォロー"
+                    value={rows.filter((row) => row.status === "要フォロー").length}
+                  />
+                  <Card
+                    label="平均正答率"
+                    value={percent(
+                      averageScores.length
+                        ? averageScores.reduce((total, value) => total + value, 0) /
+                            averageScores.length
+                        : null,
+                    )}
+                  />
+                </div>
+              )}
+
+              {tab === "Learners" && (
+                <>
+                  <div style={styles.tools}>
+                    <input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="氏名・メールで検索"
+                      aria-label="氏名またはメールで検索"
+                    />
+                    <select
+                      value={filter}
+                      onChange={(event) => setFilter(event.target.value)}
+                      aria-label="状態フィルター"
+                    >
+                      {["すべて", "未学習", "学習中", "要フォロー"].map((item) => (
+                        <option key={item}>{item}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={sort}
+                      onChange={(event) => setSort(event.target.value)}
+                      aria-label="並び替え"
+                    >
+                      <option value="last">最終学習日</option>
+                      <option value="name">氏名</option>
+                      <option value="count">学習回数</option>
+                      <option value="score">平均正答率</option>
+                    </select>
+                    <button onClick={exportCsv}>CSV出力</button>
+                  </div>
+                  <div style={styles.table}>
+                    <table>
+                      <thead>
+                        <tr>
+                          {["氏名", "状態", "学習回数", "平均正答率", "最終学習日", "教材"].map(
+                            (item) => (
+                              <th key={item}>{item}</th>
+                            ),
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {shown.map((row) => (
+                          <tr key={row.id}>
+                            <td>
+                              <b>{row.name}</b>
+                              <small>{row.email}</small>
+                            </td>
+                            <td>{row.status}</td>
+                            <td>{row.count}</td>
+                            <td>{percent(row.score)}</td>
+                            <td>{formatDate(row.last)}</td>
+                            <td>{row.course}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              {tab === "Courses" && (
+                <div style={styles.card}>
+                  実データに存在する教材:{" "}
+                  {[...new Set(rows.map((row) => row.course))].join("、") || "集計データなし"}
+                </div>
+              )}
+              {tab === "Analytics" && (
+                <div style={styles.card}>
+                  平均正答率{" "}
+                  {percent(
+                    averageScores.length
+                      ? averageScores.reduce((total, value) => total + value, 0) /
+                          averageScores.length
+                      : null,
+                  )}{" "}
+                  ・ 学習中 {rows.filter((row) => row.status === "学習中").length}名
+                </div>
+              )}
+              {tab === "Reports" && (
+                <div style={styles.card}>
+                  <p>出力対象 {shown.length}件</p>
+                  <button onClick={exportCsv}>学習者一覧CSVを出力</button>
+                  <p>PDFレポートは準備中です。</p>
+                </div>
+              )}
+              {tab === "Company" && (
+                <div style={styles.card}>
+                  <p>会社名: {String(company.name ?? company.companyName ?? "—")}</p>
+                  <p>企業コード: {code || "—"}</p>
+                  <p>契約状態: {String(company.status ?? "有効")}</p>
+                  <p>登録学習者数: {rows.length}名</p>
+                  <p>利用中のアプリ: {appName}</p>
+                  <button onClick={copyCode} disabled={!code}>
+                    {copied ? "コピーしました" : "企業コードをコピー"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function LoadErrorCard({
+  kind,
+  onRetry,
+}: {
+  kind: Exclude<LoadError, null>
+  onRetry: () => void
+}) {
+  return (
+    <section style={styles.errorCard} role="alert">
+      <h1>データを読み込めませんでした</h1>
+      <p>
+        {kind === "permission"
+          ? "企業管理画面の閲覧権限を確認してください。問題が続く場合は管理者へお問い合わせください。"
+          : "企業管理画面の読み込み中に問題が発生しました。時間をおいて再度お試しください。"}
+      </p>
+      <button onClick={onRetry}>再読み込み</button>
+    </section>
+  )
+}
+
+function InfoCard({ title, body }: { title: string; body: string }) {
+  return (
+    <section style={styles.info}>
+      <b>{title}</b>
+      <p>{body}</p>
+    </section>
+  )
+}
+
+function Card({ label, value }: { label: string; value: any }) {
+  return (
+    <article style={styles.card}>
+      <span>{label}</span>
+      <strong style={styles.number}>{value}</strong>
+    </article>
+  )
+}
+
+const styles: Record<string, React.CSSProperties> = {
+  shell: {
+    minHeight: "100dvh",
+    background: "#f5f7fb",
+    color: "#10213b",
+    fontFamily: "system-ui",
+  },
+  side: {
+    position: "fixed",
+    inset: "0 auto 0 0",
+    zIndex: 30,
+    width: 250,
+    height: "100dvh",
+    boxSizing: "border-box",
+    padding: "22px 22px max(16px, env(safe-area-inset-bottom))",
+    background: "#102342",
+    color: "white",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+  },
+  sideTop: {
+    flexShrink: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+  },
+  sideNav: {
+    flex: "1 1 auto",
+    minHeight: 0,
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+    padding: "8px 2px",
+  },
+  logoutArea: {
+    flexShrink: 0,
+    display: "flex",
+    flexDirection: "column",
+    paddingTop: 10,
+    borderTop: "1px solid #ffffff22",
+  },
+  app: { padding: "15px 0" },
+  nav: {
+    flexShrink: 0,
+    padding: 12,
+    border: 0,
+    borderRadius: 10,
+    background: "transparent",
+    color: "#ccd7e8",
+    textAlign: "left",
+  },
+  activeNav: {
+    flexShrink: 0,
+    padding: 12,
+    border: 0,
+    borderRadius: 10,
+    background: "white",
+    color: "#102342",
+    textAlign: "left",
+  },
+  main: { marginLeft: 250 },
+  header: {
+    height: 70,
+    padding: "0 28px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    background: "white",
+  },
+  content: { maxWidth: 1200, margin: "auto", padding: 28 },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
+    gap: 15,
+  },
+  card: {
+    padding: 22,
+    background: "white",
+    border: "1px solid #e2e8f0",
+    borderRadius: 18,
+    marginBottom: 15,
+  },
+  errorCard: {
+    padding: 24,
+    background: "white",
+    border: "1px solid #f0b8b8",
+    borderRadius: 18,
+  },
+  info: {
+    padding: 18,
+    background: "#eef5ff",
+    border: "1px solid #c9dcf7",
+    borderRadius: 14,
+    marginBottom: 15,
+  },
+  number: { display: "block", fontSize: 30, marginTop: 10 },
+  tools: { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 15 },
+  table: { overflowX: "auto", background: "white", borderRadius: 16 },
+  center: { minHeight: "100dvh", display: "grid", placeItems: "center" },
+}
+
+const responsive = `
+  .bdHamb,.bdScrim{display:none}
+  .bdSide button{cursor:pointer}
+  @media(max-width:800px){
+    .bdSide{transform:translateX(-105%);transition:transform .2s;width:min(250px,calc(100vw - 32px))!important}
+    .bdSide.open{transform:none}
+    .bdMain{margin-left:0!important}
+    .bdHamb{display:block}
+    .bdScrim{display:block;position:fixed;inset:0;border:0;border-radius:0;background:#09142688;z-index:20}
+  }
+  @media(max-width:430px){
+    .bdMain header{padding:0 12px!important}
+    .bdMain>div{padding:18px!important}
+  }
+  @media(max-height:650px){
+    .bdSide{padding-top:12px!important}
+    .bdSide h2{font-size:18px;margin:0}
+    .bdSide small{font-size:11px}
+    .bdSide nav{padding-block:4px!important;gap:4px!important}
+    .bdSide nav button{padding-block:9px!important}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+    outline:3px solid #ff9a65;
+    outline-offset:2px
+  }
+`
