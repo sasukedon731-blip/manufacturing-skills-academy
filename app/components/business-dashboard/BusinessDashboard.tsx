@@ -18,6 +18,15 @@ type LearnerRow = {
   last: Date | null
   status: string
   course: string
+  correct: number
+  answered: number
+  courseMetrics: CourseMetric[]
+}
+type CourseMetric = {
+  course: string
+  studyCount: number
+  correct: number
+  answered: number
 }
 type CourseStat = {
   course: string
@@ -45,20 +54,25 @@ const toDate = (value: any): Date | null => {
   return Number.isNaN(parsed.getTime()) || parsed.getTime() > Date.now() + 86400000 ? null : parsed
 }
 
-const score = (result: AnyRecord) => {
-  if (Number.isFinite(result.accuracy)) {
-    return result.accuracy <= 1
-      ? result.accuracy * 100
-      : Math.min(100, Math.max(0, result.accuracy))
-  }
+const scoredParts = (result: AnyRecord): { correct: number; answered: number } | null => {
+  if (result.completed === false || result.finished === false || result.byTimeout === true) return null
+  if (!result.completedAt && !result.createdAt) return null
   const correct = Number(result.correctCount ?? result.score)
-  const total = Number(result.totalQuestions ?? result.total ?? result.answeredCount)
-  return Number.isFinite(correct) && Number.isFinite(total) && total > 0
-    ? Math.min(100, Math.max(0, (correct / total) * 100))
-    : null
+  const answered = Number(result.totalQuestions ?? result.answeredCount ?? result.total)
+  if (
+    !Number.isFinite(correct) ||
+    !Number.isFinite(answered) ||
+    answered <= 0 ||
+    correct < 0 ||
+    correct > answered
+  ) {
+    return null
+  }
+  return { correct, answered }
 }
 
-const percent = (value: number | null) => (value == null ? "—" : `${Math.round(value)}%`)
+const percent = (value: number | null) =>
+  value == null ? "採点対象外" : `${Math.round(value)}%`
 const formatDate = (value: Date | null) => (value ? value.toLocaleDateString("ja-JP") : "—")
 const courseLabel = (id: string) => {
   try {
@@ -71,10 +85,14 @@ const jstDay = (value: Date) => Math.floor((value.getTime() + 32400000) / 864000
 
 export default function BusinessDashboard({
   appName,
+  appHomeHref,
+  appHomeLabel = "アプリへ戻る",
   loginHref = "/company/login",
   companyField = "companyCode",
 }: {
   appName: string
+  appHomeHref: string
+  appHomeLabel?: string
   loginHref?: string
   companyField?: "companyCode" | "companyId"
 }) {
@@ -150,9 +168,19 @@ export default function BusinessDashboard({
               const progress = progressSnapshot.docs.map(
                 (snapshot) => ({ id: snapshot.id, ...snapshot.data() }) as AnyRecord,
               )
-              const scores = results.map(score).filter((value): value is number => value != null)
+              const scoredResults = results
+                .map((result) => ({ result, parts: scoredParts(result) }))
+                .filter(
+                  (
+                    item,
+                  ): item is {
+                    result: AnyRecord
+                    parts: { correct: number; answered: number }
+                  } => item.parts != null,
+                )
+              const metricMap = new Map<string, CourseMetric>()
               const dates = [
-                ...results.map((result) =>
+                ...scoredResults.map(({ result }) =>
                   toDate(result.completedAt ?? result.createdAt ?? result.lastStudyAt ?? result.updatedAt),
                 ),
                 ...progress.map((item) =>
@@ -168,36 +196,55 @@ export default function BusinessDashboard({
               const last = dates.length
                 ? new Date(Math.max(...dates.map((value) => value.getTime())))
                 : null
-              const count =
-                results.length ||
-                progress.reduce((total, item) => total + Number(item.totalSessions ?? 0), 0)
+              for (const { result, parts } of scoredResults) {
+                const id = String(
+                  result.quizType ?? result.courseId ?? result.materialId ?? "教材未設定",
+                )
+                const metric = metricMap.get(id) ?? {
+                  course: courseLabel(id),
+                  studyCount: 0,
+                  correct: 0,
+                  answered: 0,
+                }
+                metric.studyCount += 1
+                metric.correct += parts.correct
+                metric.answered += parts.answered
+                metricMap.set(id, metric)
+              }
+              for (const item of progress) {
+                const sessions = Number(item.totalSessions)
+                if (!Number.isFinite(sessions) || sessions <= 0) continue
+                const id = String(item.quizType ?? item.courseId ?? item.materialId ?? item.id)
+                const metric = metricMap.get(id) ?? {
+                  course: courseLabel(id),
+                  studyCount: 0,
+                  correct: 0,
+                  answered: 0,
+                }
+                metric.studyCount += Math.floor(sessions)
+                metricMap.set(id, metric)
+              }
+              const courseMetrics = [...metricMap.values()]
+              const correct = courseMetrics.reduce((total, metric) => total + metric.correct, 0)
+              const answered = courseMetrics.reduce((total, metric) => total + metric.answered, 0)
+              const count = courseMetrics.reduce((total, metric) => total + metric.studyCount, 0)
 
               return {
                 id: person.id,
                 name: String(person.displayName ?? person.name ?? "名前未設定"),
                 email: String(person.email ?? ""),
                 count,
-                score: scores.length
-                  ? scores.reduce((total, value) => total + value, 0) / scores.length
-                  : null,
+                score: answered > 0 ? (correct / answered) * 100 : null,
+                correct,
+                answered,
+                courseMetrics,
                 last,
                 status: !count
                   ? "未学習"
                   : last && jstDay(new Date()) - jstDay(last) >= 7
                     ? "要フォロー"
                     : "学習中",
-                course: courseLabel(
-                  String(
-                    results[0]?.quizType ??
-                      results[0]?.courseId ??
-                      results[0]?.materialId ??
-                      progress[0]?.quizType ??
-                      progress[0]?.courseId ??
-                      progress[0]?.materialId ??
-                      progress[0]?.id ??
-                      "",
-                  ),
-                ),
+                course: courseMetrics[0]?.course ?? "教材未設定",
               }
             }),
           ),
@@ -238,32 +285,56 @@ export default function BusinessDashboard({
         ),
     [rows, search, filter, sort],
   )
-  const averageScores = rows.map((row) => row.score).filter((value): value is number => value != null)
+  const totalCorrect = rows.reduce((total, row) => total + row.correct, 0)
+  const totalAnswered = rows.reduce((total, row) => total + row.answered, 0)
+  const overallAccuracy =
+    totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : null
   const courseStats = useMemo<CourseStat[]>(() => {
-    const grouped = new Map<string, LearnerRow[]>()
+    const grouped = new Map<
+      string,
+      {
+        learners: number
+        studyCount: number
+        correct: number
+        answered: number
+        studying: number
+        followUp: number
+        notStarted: number
+      }
+    >()
     for (const row of rows) {
-      const learners = grouped.get(row.course) ?? []
-      learners.push(row)
-      grouped.set(row.course, learners)
+      for (const metric of row.courseMetrics) {
+        const current = grouped.get(metric.course) ?? {
+          learners: 0,
+          studyCount: 0,
+          correct: 0,
+          answered: 0,
+          studying: 0,
+          followUp: 0,
+          notStarted: 0,
+        }
+        current.learners += 1
+        current.studyCount += metric.studyCount
+        current.correct += metric.correct
+        current.answered += metric.answered
+        current.studying += row.status === "学習中" ? 1 : 0
+        current.followUp += row.status === "要フォロー" ? 1 : 0
+        current.notStarted += row.status === "未学習" ? 1 : 0
+        grouped.set(metric.course, current)
+      }
     }
 
     return [...grouped.entries()]
-      .map(([course, learners]) => {
-        const scores = learners
-          .map((learner) => learner.score)
-          .filter((value): value is number => value != null)
-        return {
-          course,
-          learners: learners.length,
-          studyCount: learners.reduce((total, learner) => total + learner.count, 0),
-          averageScore: scores.length
-            ? scores.reduce((total, value) => total + value, 0) / scores.length
-            : null,
-          studying: learners.filter((learner) => learner.status === "学習中").length,
-          followUp: learners.filter((learner) => learner.status === "要フォロー").length,
-          notStarted: learners.filter((learner) => learner.status === "未学習").length,
-        }
-      })
+      .map(([course, values]) => ({
+        course,
+        learners: values.learners,
+        studyCount: values.studyCount,
+        averageScore:
+          values.answered > 0 ? (values.correct / values.answered) * 100 : null,
+        studying: values.studying,
+        followUp: values.followUp,
+        notStarted: values.notStarted,
+      }))
       .sort((a, b) => b.studyCount - a.studyCount || a.course.localeCompare(b.course, "ja"))
   }, [rows])
 
@@ -338,8 +409,8 @@ export default function BusinessDashboard({
               onCopy={copyCode}
             />
           )}
-          <a href="/home" style={{ color: "white", padding: 10 }}>
-            アプリへ戻る
+          <a href={appHomeHref} style={{ color: "white", padding: 10 }}>
+            {appHomeLabel}
           </a>
         </div>
         <nav style={styles.sideNav} aria-label="Business Dashboard">
@@ -413,14 +484,12 @@ export default function BusinessDashboard({
                     />
                     <Card
                       label="平均正答率"
-                      value={percent(
-                        averageScores.length
-                          ? averageScores.reduce((total, value) => total + value, 0) /
-                              averageScores.length
-                          : null,
-                      )}
+                      value={percent(overallAccuracy)}
                     />
                   </div>
+                  <p style={styles.accuracyNote}>
+                    正答率は、正解数と回答数を取得できるクイズ・テストから集計しています。
+                  </p>
                   <CourseProgress stats={courseStats} />
                 </>
               )}
@@ -489,14 +558,11 @@ export default function BusinessDashboard({
               {tab === "Analytics" && (
                 <>
                   <div style={styles.card}>
-                    全体平均正答率{" "}
-                    {percent(
-                      averageScores.length
-                        ? averageScores.reduce((total, value) => total + value, 0) /
-                            averageScores.length
-                        : null,
-                    )}{" "}
+                    全体平均正答率 {percent(overallAccuracy)}{" "}
                     ・ 学習中 {rows.filter((row) => row.status === "学習中").length}名
+                    <p style={styles.accuracyNote}>
+                      正答率は、正解数と回答数を取得できるクイズ・テストから集計しています。
+                    </p>
                   </div>
                   <CourseAnalytics stats={courseStats} />
                 </>
@@ -789,6 +855,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 15,
   },
   number: { display: "block", fontSize: 30, marginTop: 10 },
+  accuracyNote: { color: "#64748b", fontSize: 13, lineHeight: 1.6 },
   tools: { display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 15 },
   table: { overflowX: "auto", background: "white", borderRadius: 16 },
   courseGrid: {
