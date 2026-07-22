@@ -1,54 +1,23 @@
-// app/api/komoju/checkout/route.ts
 import { NextResponse } from "next/server"
+
 import { adminAuth, adminDb } from "@/app/lib/firebaseAdmin"
 import { setUserBillingMerge } from "@/app/lib/billingServer"
 import { isCompanyAccount } from "@/app/lib/account"
+import {
+  calculateCheckoutAmount,
+  isRecord,
+  parseCheckoutSelection,
+} from "@/app/lib/komoju"
 
 export const runtime = "nodejs"
 
-type IndustryId =
-  | "construction"
-  | "manufacturing"
-  | "care"
-  | "driver"
-  | "undecided"
-
-type DurationDays = 30 | 90 | 180
-
-type Body = {
-  idToken: string
-  plan: "3" | "5" | "7"
-  method: "convenience" | "card"
-  durationDays: DurationDays
-  industry?: IndustryId | null
-  addAiConversation?: boolean
-}
-
-type KomojuSessionResponse = {
+type SessionResponse = {
   id?: string
   session_url?: string
-  status?: string
-  payment?: {
-    id?: string
-    status?: string
-  }
-  error?: unknown
-  message?: string
+  payment?: { id?: string }
 }
 
-const FULL_ACCESS_PLAN: Body["plan"] = "7"
-
-const BASE_PRICE_TABLE: Record<DurationDays, number> = {
-  30: 500,
-  90: 1500,
-  180: 3000,
-}
-
-const AI_ADDON_PRICE: Record<DurationDays, number> = {
-  30: 500,
-  90: 1500,
-  180: 3000,
-}
+const FULL_ACCESS_PLAN = "7" as const
 
 function requireEnv(name: string) {
   const value = process.env[name]
@@ -56,45 +25,30 @@ function requireEnv(name: string) {
   return value
 }
 
-function isValidDuration(v: any): v is DurationDays {
-  return v === 30 || v === 90 || v === 180
-}
-
-function isIndustryId(v: any): v is IndustryId {
-  return (
-    v === "construction" ||
-    v === "manufacturing" ||
-    v === "care" ||
-    v === "driver" ||
-    v === "undecided"
-  )
-}
-
-function hasFuturePeriodEnd(value: any) {
-  if (!value) return false
-
-  let date: Date | null = null
-  if (value instanceof Date) {
-    date = value
-  } else if (typeof value?.toDate === "function") {
-    date = value.toDate()
-  } else {
-    const d = new Date(value)
-    date = Number.isNaN(d.getTime()) ? null : d
+function toDate(value: unknown): Date | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toDate" in value &&
+    typeof value.toDate === "function"
+  ) {
+    const date = value.toDate()
+    return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null
   }
-
-  return !!date && date.getTime() > Date.now()
+  if (typeof value === "string" || typeof value === "number") {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  return null
 }
 
 function basicAuth(secretKey: string) {
   return `Basic ${Buffer.from(`${secretKey}:`).toString("base64")}`
 }
 
-async function createKomojuSession(
-  payload: Record<string, unknown>,
-  secretKey: string
-) {
-  const res = await fetch("https://komoju.com/api/v1/sessions", {
+async function createSession(payload: Record<string, unknown>, secretKey: string) {
+  const response = await fetch("https://komoju.com/api/v1/sessions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -102,136 +56,96 @@ async function createKomojuSession(
     },
     body: JSON.stringify(payload),
   })
-
-  const data = (await res.json().catch(() => ({}))) as KomojuSessionResponse
-
-  if (!res.ok) {
-    const message =
-      data?.message ||
-      (typeof data?.error === "string" ? data.error : null) ||
-      `KOMOJU session create failed (${res.status})`
-    const err = new Error(message) as Error & { status?: number; data?: any }
-    err.status = res.status
-    err.data = data
-    throw err
-  }
-
-  return data
+  if (!response.ok) throw new Error(`session_create_failed:${response.status}`)
+  return (await response.json()) as SessionResponse
 }
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as Body
-
-    if (!body?.idToken || !body?.plan || !body?.method) {
-      return NextResponse.json({ error: "Bad request" }, { status: 400 })
-    }
-    if (body.plan !== "3" && body.plan !== "5" && body.plan !== "7") {
-      return NextResponse.json({ error: "Bad plan" }, { status: 400 })
-    }
-    if (body.method !== "convenience" && body.method !== "card") {
-      return NextResponse.json({ error: "Bad method" }, { status: 400 })
-    }
-    if (!isValidDuration(body.durationDays)) {
-      return NextResponse.json({ error: "Bad durationDays" }, { status: 400 })
-    }
-
-    const appUrl = requireEnv("NEXT_PUBLIC_APP_URL")
-    const komojuSecretKey = requireEnv("KOMOJU_SECRET_KEY")
+    const body = parseCheckoutSelection(await req.json())
+    if (!body) return NextResponse.json({ error: "入力内容が正しくありません。" }, { status: 400 })
 
     const decoded = await adminAuth().verifyIdToken(body.idToken)
-    const uid = decoded.uid
-    const email = typeof decoded.email === "string" ? decoded.email : undefined
-    const name =
-      typeof decoded.name === "string" && decoded.name.trim()
-        ? decoded.name.trim()
-        : undefined
-    const industry = isIndustryId(body.industry) ? body.industry : "manufacturing"
-
-    // 企業契約ユーザーは企業側で利用料を負担するため、決済を作成しない。
-    // UIを迂回してAPIを直接呼ばれた場合も、サーバー側で必ず拒否する。
-    const userRef = adminDb().collection("users").doc(uid)
-    const userSnap = await userRef.get()
-    const userData = userSnap.exists ? userSnap.data() ?? {} : {}
+    const userRef = adminDb().collection("users").doc(decoded.uid)
+    const userSnapshot = await userRef.get()
+    const userData = userSnapshot.exists ? userSnapshot.data() ?? {} : {}
     if (isCompanyAccount(userData)) {
       return NextResponse.json(
         { error: "企業契約でご利用中のため、個人向けプランの購入は必要ありません。" },
-        { status: 403 }
+        { status: 403 },
       )
     }
 
-    const baseAmount = BASE_PRICE_TABLE[body.durationDays]
-    const aiAmount = body.addAiConversation ? AI_ADDON_PRICE[body.durationDays] : 0
-    const total = baseAmount + aiAmount
-
-    if (total <= 0) {
-      return NextResponse.json({ error: "Bad amount" }, { status: 400 })
-    }
-
+    const { baseAmount, aiAmount, total } = calculateCheckoutAmount(
+      body.durationDays,
+      body.addAiConversation,
+    )
     const orderRef = adminDb().collection("paymentOrders").doc()
     const orderId = orderRef.id
-    const paymentType = body.method === "convenience" ? "konbini" : "credit_card"
-    const appBaseUrl = appUrl.replace(/\/+$/, "")
+    const appUrl = requireEnv("NEXT_PUBLIC_APP_URL").replace(/\/+$/, "")
     const metadata: Record<string, string> = {
-      uid,
+      uid: decoded.uid,
       order_id: orderId,
       plan: FULL_ACCESS_PLAN,
       duration_days: String(body.durationDays),
       method: body.method,
-      industry,
-      add_ai: String(!!body.addAiConversation),
+      industry: body.industry,
+      add_ai: String(body.addAiConversation),
+      app_name: "Manufacturing Skills Academy",
+      product: "基本学習プラン",
+      option: body.addAiConversation ? "AIオプションあり" : "AIオプションなし",
+      tax_included_total: String(total),
     }
-
+    const paymentType = body.method === "convenience" ? "konbini" : "credit_card"
     const sessionPayload: Record<string, unknown> = {
       mode: "payment",
       amount: total,
       currency: "JPY",
-      return_url: `${appBaseUrl}/plans?checkout=return`,
-      external_customer_id: uid,
+      return_url: `${appUrl}/plans?checkout=return`,
+      external_customer_id: decoded.uid,
       payment_types: [paymentType],
       default_locale: "ja",
-      payment_data: {
-        external_order_num: orderId,
-        capture: "auto",
-      },
+      payment_data: { external_order_num: orderId, capture: "auto" },
       metadata,
     }
-    if (email) sessionPayload.email = email
-    if (name) sessionPayload.name = name
+    if (decoded.email) sessionPayload.email = decoded.email
+    if (decoded.name) sessionPayload.name = decoded.name
 
-    // Hosted Page sessions collect payment details and handle 3D Secure on KOMOJU.
-    // Keep payment_types aligned with the method selected in this app.
-    const session = await createKomojuSession(sessionPayload, komojuSecretKey)
+    const session = await createSession(sessionPayload, requireEnv("KOMOJU_SECRET_KEY"))
+    if (!session.id || !session.session_url) throw new Error("invalid_session_response")
 
-    if (!session?.id || !session?.session_url) {
-      throw new Error("KOMOJU session_url was not returned")
-    }
-
+    const now = new Date()
     await orderRef.set({
-      uid,
-      email: email ?? null,
+      orderId,
+      uid: decoded.uid,
+      email: decoded.email ?? null,
       plan: FULL_ACCESS_PLAN,
+      planId: FULL_ACCESS_PLAN,
       method: body.method,
       durationDays: body.durationDays,
-      industry,
-      addAiConversation: !!body.addAiConversation,
+      industry: body.industry,
+      addAiConversation: body.addAiConversation,
       amount: total,
       baseAmount,
       aiAmount,
       currency: "JPY",
       status: "pending",
+      sessionId: session.id,
+      paymentId: session.payment?.id ?? null,
       komojuSessionId: session.id,
       komojuPaymentId: session.payment?.id ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      processedEventIds: [],
+      capturedAt: null,
+      entitlementAppliedAt: null,
+      refundedAt: null,
+      createdAt: now,
+      updatedAt: now,
     })
 
-    const currentBilling = userData.billing ?? {}
-    const keepActive =
-      currentBilling?.status === "active" &&
-      hasFuturePeriodEnd(currentBilling?.currentPeriodEnd)
-
-    await setUserBillingMerge(uid, {
+    const billing = isRecord(userData.billing) ? userData.billing : {}
+    const currentEnd = toDate(billing.currentPeriodEnd)
+    const keepActive = billing.status === "active" && !!currentEnd && currentEnd > now
+    await setUserBillingMerge(decoded.uid, {
       accountType: "personal",
       method: body.method,
       status: keepActive ? "active" : "pending",
@@ -242,11 +156,12 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({ url: session.session_url }, { status: 200 })
-  } catch (e: any) {
-    console.error("KOMOJU checkout error:", e)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "unknown"
+    console.error("KOMOJU checkout failed", { message })
     return NextResponse.json(
-      { error: e?.message ?? "決済ページの作成に失敗しました" },
-      { status: 500 }
+      { error: "決済ページの作成に失敗しました。時間をおいて再度お試しください。" },
+      { status: 500 },
     )
   }
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { onAuthStateChanged } from "firebase/auth"
+import type { User } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 
 import { auth, db } from "@/app/lib/firebase"
@@ -14,6 +15,7 @@ import AppHeader from "@/app/components/AppHeader"
 import LegalFooter from "@/app/components/LegalFooter"
 import CheckoutResultNotice from "@/app/components/billing/CheckoutResultNotice"
 import KonbiniGuideNotice from "@/app/components/billing/KonbiniGuideNotice"
+import type { SessionResultState } from "@/app/lib/komoju"
 
 type DurationDays = 30 | 90 | 180
 type PaymentMethod = "convenience" | "card"
@@ -27,9 +29,9 @@ const DURATION_OPTIONS: Array<{
   price: number
   note: string
 }> = [
-  { days: 30, label: "1ヶ月プラン", price: 500, note: "まず試しやすい期間" },
-  { days: 90, label: "3ヶ月プラン", price: 1500, note: "続けて学ぶ方向け" },
-  { days: 180, label: "6ヶ月プラン", price: 3000, note: "じっくり定着させる方向け" },
+  { days: 30, label: "30日プラン", price: 500, note: "まず試しやすい期間" },
+  { days: 90, label: "90日プラン", price: 1500, note: "続けて学ぶ方向け" },
+  { days: 180, label: "180日プラン", price: 3000, note: "じっくり定着させる方向け" },
 ]
 
 const AI_ADDON_PRICE: Record<DurationDays, number> = {
@@ -70,13 +72,14 @@ export default function PlansPage() {
   const router = useRouter()
   const params = useSearchParams()
   const checkout = params.get("checkout")
+  const returnedSessionId = params.get("session_id")
   const industryParamRaw = params.get("industry")
   const industry: IndustryId | null = isIndustryId(industryParamRaw)
     ? industryParamRaw
     : "manufacturing"
 
   const [uid, setUid] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -87,6 +90,8 @@ export default function PlansPage() {
   const [addAiConversation, setAddAiConversation] = useState(false)
   const [aiConversationEnabled, setAiConversationEnabled] = useState(false)
   const [isCompanyAccount, setIsCompanyAccount] = useState(false)
+  const [sessionState, setSessionState] = useState<SessionResultState | null>(null)
+  const [checkingSession, setCheckingSession] = useState(checkout === "return")
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -122,6 +127,43 @@ export default function PlansPage() {
       }
     })()
   }, [uid])
+
+  useEffect(() => {
+    if (checkout !== "return") return
+    if (!user || !returnedSessionId) {
+      if (user) {
+        setSessionState("unknown")
+        setCheckingSession(false)
+      }
+      return
+    }
+    let active = true
+    ;(async () => {
+      try {
+        const idToken = await user.getIdToken()
+        const response = await fetch("/api/komoju/session-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken, sessionId: returnedSessionId }),
+        })
+        const value: unknown = await response.json()
+        const state =
+          typeof value === "object" && value !== null && "state" in value
+            ? value.state
+            : "unknown"
+        const allowed: SessionResultState[] = [
+          "paid", "processing", "konbini_waiting", "failed", "cancelled", "unknown",
+        ]
+        if (active) setSessionState(allowed.includes(state as SessionResultState) ? state as SessionResultState : "unknown")
+      } catch (sessionError: unknown) {
+        console.error("決済状態の確認に失敗しました", sessionError)
+        if (active) setSessionState("unknown")
+      } finally {
+        if (active) setCheckingSession(false)
+      }
+    })()
+    return () => { active = false }
+  }, [checkout, returnedSessionId, user])
 
   const selectedOption = useMemo(
     () => DURATION_OPTIONS.find((option) => option.days === durationDays) ?? DURATION_OPTIONS[0],
@@ -162,9 +204,9 @@ export default function PlansPage() {
       if (!data?.url) throw new Error("決済URLを取得できませんでした")
 
       window.location.href = data.url
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e)
-      setError(e?.message ?? "決済ページの作成に失敗しました")
+      setError(e instanceof Error ? e.message : "決済ページの作成に失敗しました")
     } finally {
       setSaving(false)
     }
@@ -179,7 +221,9 @@ export default function PlansPage() {
       {!isCompanyAccount ? (
         <>
           <CheckoutResultNotice
-            checkout={checkout}
+            visible={checkout === "return"}
+            checking={checkingSession}
+            state={sessionState}
             showAiCta={aiConversationEnabled || addAiConversation}
           />
           <KonbiniGuideNotice />
@@ -254,7 +298,7 @@ export default function PlansPage() {
                 }}
               >
                 <span style={styles.optionTitle}>{option.label}</span>
-                <span style={styles.optionPrice}>¥{formatYen(option.price)}</span>
+                <span style={styles.optionPrice}>¥{formatYen(option.price)}（税込）</span>
                 <span style={styles.optionNote}>{option.note}</span>
               </button>
             )
@@ -295,7 +339,7 @@ export default function PlansPage() {
           />
           <span style={styles.checkBody}>
             <b>AIオプションを追加する</b>
-            <span>+ ¥{formatYen(AI_ADDON_PRICE[durationDays])} / {selectedOption.label}</span>
+            <span>+ ¥{formatYen(AI_ADDON_PRICE[durationDays])}（税込） / {selectedOption.label}</span>
           </span>
         </label>
         {aiConversationEnabled ? (
@@ -315,7 +359,7 @@ export default function PlansPage() {
         </div>
         <div style={styles.totalDivider} />
         <div style={styles.totalBottom}>
-          <span>今回のお支払い</span>
+          <span>今回のお支払い（税込）</span>
           <b>¥{formatYen(grandTotal)}</b>
         </div>
         <p style={styles.smallNote}>

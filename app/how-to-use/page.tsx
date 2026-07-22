@@ -95,7 +95,7 @@ export default function HowToUsePage() {
           <ul className="stackSm" style={{ color: "#111827" }}>
             <li>・基本学習プラン：日本語・製造系・ゲーム教材</li>
             <li>・AIオプション：AI会話・AIスピーキング</li>
-            <li>・1ヶ月 / 3ヶ月 / 6ヶ月から選択</li>
+            <li>・30日 / 90日 / 180日から選択</li>
             <li>・自動更新なし</li>
           </ul>
 

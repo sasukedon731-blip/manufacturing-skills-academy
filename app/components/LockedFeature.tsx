@@ -37,7 +37,7 @@ export default function LockedFeature({
       </div>
 
       <div className="text-xs text-gray-500 mb-4">
-        無料ユーザーは日本語バトルを1日1回利用できます。有料プランでは選んだ教材を1か月利用できます。
+        無料ユーザーは日本語バトルを1日1回利用できます。有料プランでは購入した利用期間中、対象教材を利用できます。
       </div>
 
       <button

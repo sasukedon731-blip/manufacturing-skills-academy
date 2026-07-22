@@ -22,6 +22,7 @@ export default function TokushohoPage() {
 お問い合わせはメール（support@outin-plus.com）にてお願いいたします。`}
         />
         <InfoRow label="メールアドレス" value="support@outin-plus.com" />
+        <InfoRow label="サービス名" value="Manufacturing Skills Academy" />
         <InfoRow label="販売URL" value="https://manufacturing-skills-academy.vercel.app/" />
 
         <SectionTitle>販売価格</SectionTitle>
@@ -60,6 +61,21 @@ export default function TokushohoPage() {
         <p style={styles.text}>
           本サービスは買い切り型の期間利用権販売です。自動更新はありません。
           購入した期間のみ利用できます。期間終了後は必要に応じて再購入してください。
+        </p>
+
+        <SectionTitle>無料体験</SectionTitle>
+        <p style={styles.text}>
+          個人ユーザーは新規登録後、1日間無料で対象機能を試すことができます。無料体験終了後に自動で課金されることはありません。
+        </p>
+
+        <SectionTitle>企業利用</SectionTitle>
+        <p style={styles.text}>
+          企業コードで登録したユーザーの利用料金は企業契約に基づきます。企業ユーザーへ個人向けプランの料金を請求することはありません。
+        </p>
+
+        <SectionTitle>動作環境</SectionTitle>
+        <p style={styles.text}>
+          インターネットへ接続できる環境と、最新版のGoogle Chrome、Microsoft Edge、Safari等の主要なWebブラウザが必要です。端末やブラウザの設定により、一部機能を利用できない場合があります。
         </p>
 
         <SectionTitle>キャンセル・返金</SectionTitle>
