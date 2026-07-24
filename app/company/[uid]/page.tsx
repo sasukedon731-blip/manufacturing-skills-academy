@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -115,8 +116,19 @@ export default function CompanyUserDetailPage() {
           getDocs(collection(db, "users", uid, "achievements")).catch(() => null),
         ])
         setUserDoc(target)
-        setResults((resultsSnap?.docs.map((d) => d.data() as ResultDoc) ?? []).sort((a, b) => (parseDate(b.createdAt ?? b.updatedAt)?.getTime() ?? 0) - (parseDate(a.createdAt ?? a.updatedAt)?.getTime() ?? 0)))
-        setProgresses(progressSnap?.docs.map((d) => ({ quizType: d.id, ...(d.data() as ProgressDoc) })) ?? [])
+        setResults(
+          (resultsSnap?.docs.map((d) => d.data() as ResultDoc) ?? [])
+            .filter((result) => Boolean(result.quizType && getQuizDef(result.quizType)))
+            .sort(
+              (a, b) =>
+                (parseDate(b.createdAt ?? b.updatedAt)?.getTime() ?? 0) -
+                (parseDate(a.createdAt ?? a.updatedAt)?.getTime() ?? 0),
+            ),
+        )
+        setProgresses(
+          (progressSnap?.docs.map((d) => ({ quizType: d.id, ...(d.data() as ProgressDoc) })) ?? [])
+            .filter((progress) => Boolean(progress.quizType && getQuizDef(progress.quizType))),
+        )
         setBadgeCount(achievementSnap?.size ?? 0)
       } catch (e) {
         console.error(e)

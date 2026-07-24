@@ -164,9 +164,23 @@ export default function BusinessDashboard({
                 getDocs(collection(db, "users", person.id, "results")),
                 getDocs(collection(db, "users", person.id, "progress")),
               ])
-              const results = resultsSnapshot.docs.map((snapshot) => snapshot.data() as AnyRecord)
+              const results = resultsSnapshot.docs
+                .map((snapshot) => snapshot.data() as AnyRecord)
+                .filter((result) =>
+                  Boolean(
+                    getQuizDef(
+                      String(result.quizType ?? result.courseId ?? result.materialId ?? ""),
+                    ),
+                  ),
+                )
               const progress = progressSnapshot.docs.map(
                 (snapshot) => ({ id: snapshot.id, ...snapshot.data() }) as AnyRecord,
+              ).filter((item) =>
+                Boolean(
+                  getQuizDef(
+                    String(item.quizType ?? item.courseId ?? item.materialId ?? item.id ?? ""),
+                  ),
+                ),
               )
               const scoredResults = results
                 .map((result) => ({ result, parts: scoredParts(result) }))

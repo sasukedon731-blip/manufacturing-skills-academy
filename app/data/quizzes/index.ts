@@ -5,9 +5,6 @@ import { speakingPractice } from "./speaking-practice"
 import { genbaListening } from "./genba-listening"
 import { genbaPhrasebook } from "./genba-phrasebook"
 import { kansaiListeningQuiz } from "./kansai-listening"
-import { dialectListeningQuiz } from "./dialect-listening"
-import { dialectMeaningQuiz } from "./dialect-meaning"
-import { confusingJapaneseQuiz } from "./confusing-japanese"
 
 import { manufacturingMeaningQuiz } from "./manufacturing-meaning-150"
 import { manufacturingWordQuiz } from "./manufacturing-word-100"
@@ -24,9 +21,6 @@ export const quizzes = {
   "genba-listening": genbaListening,
   "genba-phrasebook": genbaPhrasebook,
   "kansai-listening": kansaiListeningQuiz,
-  "dialect-listening": dialectListeningQuiz,
-  "dialect-meaning": dialectMeaningQuiz,
-  "confusing-japanese": confusingJapaneseQuiz,
 
   "manufacturing-meaning": manufacturingMeaningQuiz,
   "manufacturing-word": manufacturingWordQuiz,

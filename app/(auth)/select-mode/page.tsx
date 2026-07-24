@@ -26,7 +26,7 @@ const categories: Category[] = [
   {
     id: "japanese",
     title: "日本語",
-    description: "JLPT、現場で使う日本語、方言・まぎらわしい表現を練習します。",
+    description: "JLPT、現場で使う日本語、会話表現を練習します。",
     color: "#2563eb",
     items: [
       { kind: "quiz", id: "japanese-n4", note: "基礎" },
@@ -35,9 +35,6 @@ const categories: Category[] = [
       { kind: "quiz", id: "genba-listening" },
       { kind: "quiz", id: "genba-phrasebook" },
       { kind: "quiz", id: "kansai-listening" },
-      { kind: "quiz", id: "dialect-listening" },
-      { kind: "quiz", id: "dialect-meaning" },
-      { kind: "quiz", id: "confusing-japanese" },
     ],
   },
   {
