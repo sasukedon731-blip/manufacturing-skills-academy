@@ -8,7 +8,6 @@ import { doc, getDoc } from "firebase/firestore"
 
 import { auth, db } from "@/app/lib/firebase"
 import { quizzes } from "@/app/data/quizzes"
-import { type PlanId } from "@/app/lib/plan"
 import { isCompanyAccount as isCompanyUserAccount } from "@/app/lib/account"
 import { loadAndRepairUserPlanState } from "@/app/lib/userPlanState"
 import AppHeader from "@/app/components/AppHeader"
@@ -16,12 +15,20 @@ import LegalFooter from "@/app/components/LegalFooter"
 import CheckoutResultNotice from "@/app/components/billing/CheckoutResultNotice"
 import KonbiniGuideNotice from "@/app/components/billing/KonbiniGuideNotice"
 import type { SessionResultState } from "@/app/lib/komoju"
+import BillingStatusCard from "@/app/components/billing/BillingStatusCard"
+import type { BillingLike, DateLike } from "@/app/lib/billingAccess"
 
 type DurationDays = 30 | 90 | 180
 type PaymentMethod = "convenience" | "card"
 type IndustryId = "construction" | "manufacturing" | "care" | "driver" | "undecided"
+type AccountData = {
+  accountType?: unknown
+  companyCode?: unknown
+  billing?: BillingLike | null
+  trialEndsAt?: DateLike
+}
 
-const FULL_ACCESS_PLAN: Extract<PlanId, "7"> = "7"
+const FULL_ACCESS_PLAN = "7" as const
 
 const DURATION_OPTIONS: Array<{
   days: DurationDays
@@ -62,12 +69,6 @@ function formatYen(n: number) {
   return n.toLocaleString("ja-JP")
 }
 
-function getPlanLabel(plan: PlanId) {
-  if (plan === "trial") return "無料体験"
-  if (plan === "free") return "無料プラン"
-  return "基本学習プラン"
-}
-
 export default function PlansPage() {
   const router = useRouter()
   const params = useSearchParams()
@@ -83,13 +84,12 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
-  const [currentPlan, setCurrentPlan] = useState<PlanId>("trial")
-  const [displayName, setDisplayName] = useState("")
   const [durationDays, setDurationDays] = useState<DurationDays>(30)
   const [billingMethod, setBillingMethod] = useState<PaymentMethod>("convenience")
   const [addAiConversation, setAddAiConversation] = useState(false)
   const [aiConversationEnabled, setAiConversationEnabled] = useState(false)
   const [isCompanyAccount, setIsCompanyAccount] = useState(false)
+  const [accountData, setAccountData] = useState<AccountData | null>(null)
   const [sessionState, setSessionState] = useState<SessionResultState | null>(null)
   const [checkingSession, setCheckingSession] = useState(checkout === "return")
 
@@ -111,14 +111,18 @@ export default function PlansPage() {
       setLoading(true)
       setError("")
       try {
-        const st = await loadAndRepairUserPlanState(uid)
-        setCurrentPlan(st.plan)
-        setDisplayName(st.displayName)
+        await loadAndRepairUserPlanState(uid)
 
         const userSnap = await getDoc(doc(db, "users", uid))
         const userData = userSnap.exists() ? userSnap.data() : null
         setAiConversationEnabled(Boolean(userData?.billing?.aiConversationEnabled))
         setIsCompanyAccount(isCompanyUserAccount(userData))
+        setAccountData({
+          accountType: userData?.accountType,
+          companyCode: userData?.companyCode,
+          billing: (userData?.billing as BillingLike | undefined) ?? null,
+          trialEndsAt: userData?.trialEndsAt as DateLike | undefined,
+        })
       } catch (e) {
         console.error(e)
         setError("プラン情報の読み込みに失敗しました")
@@ -230,6 +234,8 @@ export default function PlansPage() {
         </>
       ) : null}
 
+      <BillingStatusCard userData={accountData} />
+
       <section style={styles.hero}>
         <div style={styles.eyebrow}>製造・日本語・ゲーム・AI</div>
         <h1 style={styles.heroTitle}>基本学習はひとつのプラン、AIだけ別料金</h1>
@@ -242,26 +248,6 @@ export default function PlansPage() {
           <InfoCard title="AIオプション" text="AI会話・AIスピーキングを使う場合だけ追加料金がかかります。" />
         </div>
       </section>
-
-      <section style={styles.card}>
-        <div style={styles.cardTitle}>
-          {isCompanyAccount ? "現在のご利用状況" : "現在のプラン"}
-        </div>
-        <p style={styles.cardText}>
-          {displayName ? `${displayName} さん：` : ""}
-          <b>{isCompanyAccount ? "企業契約" : getPlanLabel(currentPlan)}</b>
-          {aiConversationEnabled ? " / AIオプション有効" : ""}
-        </p>
-      </section>
-
-      {isCompanyAccount ? (
-        <section style={{ ...styles.card, background: "#ecfdf5", borderColor: "rgba(16,185,129,.35)" }}>
-          <div style={styles.cardTitle}>企業契約でご利用中です</div>
-          <p style={styles.cardText}>
-            利用料金は企業契約に含まれています。個人でプランを購入する必要はありません。
-          </p>
-        </section>
-      ) : null}
 
       {isCompanyAccount ? (
         <section style={{ ...styles.card, background: "#eff6ff", borderColor: "rgba(37,99,235,.28)" }}>

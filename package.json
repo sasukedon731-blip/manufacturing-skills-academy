@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:billing": "tsx --test tests/billing-usage.test.ts",
     "test:komoju": "firebase emulators:exec --only firestore --project demo-manufacturing-skills-academy \"tsx --test tests/komoju.checkout.test.ts tests/komoju.webhook.test.ts tests/komoju.session.test.ts\"",
     "test:firestore-rules": "firebase emulators:exec --only firestore --project demo-manufacturing-skills-academy \"node --test tests/firestore.rules.test.mjs\""
   },

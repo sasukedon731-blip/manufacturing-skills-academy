@@ -1,80 +1,113 @@
-// app/lib/billingAccess.ts
+export type DateLike =
+  | Date
+  | string
+  | number
+  | { seconds?: number; toDate?: () => Date }
+  | null
 
 export type BillingLike = Partial<{
   status: "pending" | "active" | "past_due" | "canceled"
   currentPlan: "trial" | "free" | "3" | "5" | "7"
-  currentPeriodEnd: any
+  currentPeriodEnd: DateLike
   aiConversationEnabled: boolean
-  aiConversationExpiresAt: any
+  aiConversationExpiresAt: DateLike
 }>
 
-function toDate(value: any): Date | null {
+export type AccountUsageInput = {
+  isCompany: boolean
+  billing?: BillingLike | null
+  trialEndsAt?: DateLike
+}
+
+export type PeriodView = {
+  end: Date | null
+  remainingDays: number
+  remainingHours: number
+  active: boolean
+  expiringSoon: boolean
+}
+
+export type AccountUsageView = {
+  kind: "company" | "active" | "expired" | "pending" | "past_due" | "canceled" | "trial" | "trial_expired" | "none"
+  plan: PeriodView
+  ai: PeriodView & { enabled: boolean }
+  trial: PeriodView
+}
+
+export function normalizeDate(value: DateLike | unknown): Date | null {
   if (!value) return null
-
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  if (typeof value === "object" && value !== null) {
+    if ("toDate" in value && typeof value.toDate === "function") {
+      const date = value.toDate()
+      return date instanceof Date && !Number.isNaN(date.getTime()) ? date : null
+    }
+    if ("seconds" in value && typeof value.seconds === "number" && Number.isFinite(value.seconds)) {
+      const date = new Date(value.seconds * 1000)
+      return Number.isNaN(date.getTime()) ? null : date
+    }
+    return null
   }
+  if (typeof value !== "string" && typeof value !== "number") return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
 
-  if (typeof value?.toDate === "function") {
-    const d = value.toDate()
-    return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null
+export function getPeriodView(value: DateLike | unknown, nowMs = Date.now()): PeriodView {
+  const end = normalizeDate(value)
+  const safeNow = Number.isFinite(nowMs) ? nowMs : Date.now()
+  if (!end) return { end: null, remainingDays: 0, remainingHours: 0, active: false, expiringSoon: false }
+  const diff = end.getTime() - safeNow
+  if (!Number.isFinite(diff) || diff <= 0) {
+    return { end, remainingDays: 0, remainingHours: 0, active: false, expiringSoon: false }
   }
+  const remainingDays = Math.max(1, Math.ceil(diff / 86_400_000))
+  const remainingHours = Math.max(1, Math.ceil(diff / 3_600_000))
+  return { end, remainingDays, remainingHours, active: true, expiringSoon: remainingDays <= 7 }
+}
 
-  if (typeof value?.seconds === "number") {
-    return new Date(value.seconds * 1000)
-  }
+export function getAccountUsageView(input: AccountUsageInput, nowMs = Date.now()): AccountUsageView {
+  const plan = getPeriodView(input.billing?.currentPeriodEnd, nowMs)
+  const aiPeriod = getPeriodView(input.billing?.aiConversationExpiresAt, nowMs)
+  const trial = getPeriodView(input.trialEndsAt, nowMs)
+  const ai = { ...aiPeriod, enabled: input.billing?.aiConversationEnabled === true && aiPeriod.active }
 
-  const d = new Date(value)
-  return Number.isNaN(d.getTime()) ? null : d
+  let kind: AccountUsageView["kind"]
+  if (input.isCompany) kind = "company"
+  else if (input.billing?.status === "active" && plan.active) kind = "active"
+  else if (input.billing?.status === "active") kind = "expired"
+  else if (input.billing?.status === "pending") kind = "pending"
+  else if (input.billing?.status === "past_due") kind = "past_due"
+  else if (input.billing?.status === "canceled") kind = "canceled"
+  else if (trial.active) kind = "trial"
+  else if (normalizeDate(input.trialEndsAt)) kind = "trial_expired"
+  else kind = "none"
+
+  return { kind, plan, ai, trial }
 }
 
 export function isBillingActive(billing?: BillingLike | null) {
-  if (!billing) return false
-  if (billing.status !== "active") return false
-
-  const end = toDate(billing.currentPeriodEnd)
-  if (!end) return false
-
-  return end.getTime() > Date.now()
+  return billing?.status === "active" && getPeriodView(billing.currentPeriodEnd).active
 }
 
 export function canUseAiConversation(billing?: BillingLike | null) {
-  if (!billing) return false
-  if (!billing.aiConversationEnabled) return false
-  if (billing.status !== "active") return false
-
-  const end = toDate(billing.aiConversationExpiresAt)
-  if (!end) return false
-
-  return end.getTime() > Date.now()
+  return billing?.status === "active" && billing.aiConversationEnabled === true && getPeriodView(billing.aiConversationExpiresAt).active
 }
 
 export function getBillingDaysLeft(billing?: BillingLike | null) {
-  const end = toDate(billing?.currentPeriodEnd)
-  if (!end) return 0
-
-  const diff = end.getTime() - Date.now()
-  if (diff <= 0) return 0
-
-  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  return getPeriodView(billing?.currentPeriodEnd).remainingDays
 }
 
 export function getAiConversationDaysLeft(billing?: BillingLike | null) {
-  const end = toDate(billing?.aiConversationExpiresAt)
-  if (!end) return 0
-
-  const diff = end.getTime() - Date.now()
-  if (diff <= 0) return 0
-
-  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  return getPeriodView(billing?.aiConversationExpiresAt).remainingDays
 }
 
 export function getBillingEndDate(billing?: BillingLike | null) {
-  return toDate(billing?.currentPeriodEnd)
+  return normalizeDate(billing?.currentPeriodEnd)
 }
 
 export function getAiConversationEndDate(billing?: BillingLike | null) {
-  return toDate(billing?.aiConversationExpiresAt)
+  return normalizeDate(billing?.aiConversationExpiresAt)
 }
 
 export function getBillingViewState(billing?: BillingLike | null) {
@@ -87,21 +120,21 @@ export function getBillingViewState(billing?: BillingLike | null) {
 }
 
 export function getPlanLabel(plan?: string | null) {
-  switch (plan) {
-    case "3":
-    case "5":
-    case "7":
-      return "基本学習プラン"
-    case "trial":
-      return "無料体験"
-    case "free":
-      return "無料プラン"
-    default:
-      return "未契約"
-  }
+  if (plan === "3" || plan === "5" || plan === "7") return "基本学習プラン"
+  if (plan === "trial") return "無料体験"
+  if (plan === "free") return "無料プラン"
+  return "未契約"
 }
 
 export function formatDateJP(date?: Date | null) {
-  if (!date) return "-"
-  return date.toLocaleDateString("ja-JP")
+  if (!date || Number.isNaN(date.getTime())) return "日時を確認できません"
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)
 }

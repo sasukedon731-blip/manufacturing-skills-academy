@@ -17,6 +17,8 @@ import {
   getUnlockedBadgeCount,
   getRarityColors,
 } from "@/app/lib/badges"
+import BillingStatusCard from "@/app/components/billing/BillingStatusCard"
+import type { BillingLike, DateLike } from "@/app/lib/billingAccess"
 
 type QuizResult = {
   score: number
@@ -33,6 +35,13 @@ type Progress = {
   streak?: number
   bestStreak?: number
   updatedAt?: unknown
+}
+
+type AccountData = {
+  accountType?: unknown
+  companyCode?: unknown
+  billing?: BillingLike | null
+  trialEndsAt?: DateLike
 }
 
 type TimestampLike = {
@@ -192,6 +201,7 @@ export default function MyPage() {
   const [attackRanks, setAttackRanks] = useState<Record<string, { rank: number | null; bestScore: number }>>({})
 
   const [badges, setBadges] = useState<string[]>([])
+  const [accountData, setAccountData] = useState<AccountData | null>(null)
 
   // ✅ インデックス不要：結果まとめ持ち
   const [allResults, setAllResults] = useState<QuizResult[]>([])
@@ -266,8 +276,14 @@ export default function MyPage() {
         const userData = snap.exists() ? (snap.data() as Record<string, unknown>) : {}
         const badgeList = Array.isArray(userData.badges) ? userData.badges.filter((x): x is string => typeof x === "string") : []
         setBadges(badgeList)
+        setAccountData({
+          accountType: userData.accountType,
+          companyCode: userData.companyCode,
+          billing: (userData.billing as BillingLike | undefined) ?? null,
+          trialEndsAt: userData.trialEndsAt as DateLike | undefined,
+        })
       } catch {
-        // ignore
+        setAccountData(null)
       }
     })()
   }, [user?.uid])
@@ -461,6 +477,8 @@ const totalBadgeCount = useMemo(() => getTotalBadgeCount(), [])
         </header>
 
         {error ? <div style={S.alert}>{error}</div> : null}
+
+        <BillingStatusCard userData={accountData} />
 
         {/* 学習サマリー */}
         <section style={S.card}>

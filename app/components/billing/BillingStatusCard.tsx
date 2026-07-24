@@ -1,248 +1,182 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+
+import { isCompanyAccount } from "@/app/lib/account"
 import {
-  canUseAiConversation,
   formatDateJP,
-  getAiConversationDaysLeft,
-  getAiConversationEndDate,
-  getBillingDaysLeft,
-  getBillingEndDate,
-  getBillingViewState,
-  getPlanLabel,
+  getAccountUsageView,
   type BillingLike,
+  type DateLike,
+  type PeriodView,
 } from "@/app/lib/billingAccess"
 
-type Props = {
+type AccountData = {
+  accountType?: unknown
+  companyCode?: unknown
   billing?: BillingLike | null
+  trialEndsAt?: DateLike
+}
+
+type Props = {
+  userData?: AccountData | null
   plansHref?: string
 }
 
-export default function BillingStatusCard({
-  billing,
-  plansHref = "/plans",
-}: Props) {
-  const billingState = getBillingViewState(billing)
-  const planLabel = getPlanLabel(billing?.currentPlan)
-  const billingDaysLeft = getBillingDaysLeft(billing)
-  const billingEndDate = getBillingEndDate(billing)
+export default function BillingStatusCard({ userData, plansHref = "/plans" }: Props) {
+  const [nowMs, setNowMs] = useState<number | null>(null)
 
-  const aiEnabled = canUseAiConversation(billing)
-  const aiDaysLeft = getAiConversationDaysLeft(billing)
-  const aiEndDate = getAiConversationEndDate(billing)
+  useEffect(() => {
+    const update = () => setNowMs(Date.now())
+    update()
+    const timer = window.setInterval(update, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const company = isCompanyAccount(userData)
+  const usage = useMemo(
+    () => getAccountUsageView(
+      {
+        isCompany: company,
+        billing: userData?.billing,
+        trialEndsAt: userData?.trialEndsAt,
+      },
+      nowMs ?? 0,
+    ),
+    [company, nowMs, userData?.billing, userData?.trialEndsAt],
+  )
+
+  if (nowMs === null) {
+    return <section style={cardStyle} aria-busy="true">ご利用状況を確認しています...</section>
+  }
+
+  if (usage.kind === "company") {
+    return (
+      <section style={cardStyle}>
+        <Heading />
+        <StateBox
+          title="企業契約でご利用中です"
+          description="利用料金は企業契約に含まれています。"
+        />
+      </section>
+    )
+  }
 
   return (
-    <section
-      style={{
-        border: "1px solid rgba(0,0,0,0.08)",
-        borderRadius: 20,
-        background: "white",
-        padding: 18,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div style={{ fontWeight: 900, fontSize: 18 }}>ご利用プラン</div>
-          <div style={{ marginTop: 4, fontSize: 13, opacity: 0.7 }}>
-            契約状態と有効期限を確認できます
-          </div>
-        </div>
-
-        <Link
-          href={plansHref}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            border: "1px solid rgba(0,0,0,0.12)",
-            borderRadius: 12,
-            padding: "10px 14px",
-            fontSize: 13,
-            fontWeight: 900,
-            textDecoration: "none",
-            color: "#111",
-            background: "white",
-          }}
-        >
-          プランを見る
-        </Link>
+    <section style={cardStyle}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <Heading />
+        <Link href={plansHref} style={linkStyle}>プランを見る</Link>
       </div>
 
-      <div
-        style={{
-          marginTop: 14,
-          border: "1px solid rgba(0,0,0,0.06)",
-          borderRadius: 16,
-          background: "#f8fafc",
-          padding: 14,
-        }}
-      >
-        <div style={{ fontSize: 13, opacity: 0.7 }}>現在のプラン</div>
-        <div style={{ marginTop: 6, fontWeight: 900, fontSize: 18 }}>{planLabel}</div>
-
-        <div style={{ marginTop: 14 }}>
-          {billingState === "none" && (
-            <StateBox
-              title="未契約"
-              description="まだプラン購入はありません。購入すると教材と機能が解放されます。"
-            />
+      {usage.kind === "active" ? (
+        <>
+          <PeriodSection title="基本学習プラン：利用中" period={usage.plan} />
+          <div style={renewalStyle}><b>自動更新：</b>なし</div>
+          {usage.ai.enabled ? (
+            <PeriodSection title="AIオプション：利用中" period={usage.ai} />
+          ) : (
+            <StateBox title="AIオプション：未契約" description="AIオプションの利用期限は設定されていません。" />
           )}
+        </>
+      ) : null}
 
-          {billingState === "pending" && (
-            <StateBox
-              title="お支払い確認待ち"
-              description="コンビニ支払い確認後に利用可能になります。反映まで少し時間がかかる場合があります。"
-            />
-          )}
-
-          {billingState === "past_due" && (
-            <StateBox
-              title="お支払いエラー"
-              description="お支払いに失敗しました。もう一度お手続きください。"
-            />
-          )}
-
-          {billingState === "canceled" && (
-            <StateBox
-              title="利用停止中"
-              description="現在このプランは利用停止中です。必要に応じて再購入してください。"
-            />
-          )}
-
-          {billingState === "expired" && (
-            <StateBox
-              title="有効期限切れ"
-              description="有効期限が切れています。再購入でそのまま再開できます。"
-            />
-          )}
-
-          {billingState === "active" && (
-            <div
-              style={{
-                marginTop: 10,
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 10,
-              }}
-            >
-              <InfoBox label="残り日数" value={`${billingDaysLeft}日`} />
-              <InfoBox label="有効期限" value={formatDateJP(billingEndDate)} />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div
-        style={{
-          marginTop: 14,
-          border: "1px solid rgba(0,0,0,0.08)",
-          borderRadius: 16,
-          background: "white",
-          padding: 14,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div style={{ fontWeight: 900 }}>AI会話オプション</div>
-            <div style={{ marginTop: 4, fontSize: 13, opacity: 0.7 }}>
-              AI会話機能の利用状態
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 999,
-              padding: "8px 12px",
-              fontSize: 13,
-              fontWeight: 900,
-              border: "1px solid rgba(0,0,0,0.08)",
-              background: aiEnabled ? "#ecfdf5" : "#f3f4f6",
-              color: aiEnabled ? "#047857" : "#4b5563",
-            }}
-          >
-            {aiEnabled ? "利用可能" : "未加入 / 期限切れ"}
-          </div>
-        </div>
-
-        {aiEnabled ? (
-          <div
-            style={{
-              marginTop: 12,
-              display: "grid",
-              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-              gap: 10,
-            }}
-          >
-            <InfoBox label="残り日数" value={`${aiDaysLeft}日`} />
-            <InfoBox label="有効期限" value={formatDateJP(aiEndDate)} />
-          </div>
-        ) : (
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>
-            AI会話は有料オプションです。必要な場合はプラン購入時に追加してください。
-          </div>
-        )}
-      </div>
+      {usage.kind === "pending" ? (
+        <StateBox title="お支払い確認待ち" description="入金確認後にプランが有効になります。" />
+      ) : null}
+      {usage.kind === "expired" ? (
+        <StateBox title="基本学習プラン：期限切れ" description="プランを購入すると学習を再開できます。" />
+      ) : null}
+      {usage.kind === "past_due" ? (
+        <StateBox title="お支払いを確認できませんでした" description="お支払い方法をご確認のうえ、もう一度お手続きください。" />
+      ) : null}
+      {usage.kind === "canceled" ? (
+        <StateBox title="プランは利用停止中です" description="必要な場合はプランを再購入してください。" />
+      ) : null}
+      {usage.kind === "trial" ? (
+        <TrialSection period={usage.trial} />
+      ) : null}
+      {usage.kind === "trial_expired" ? (
+        <StateBox title="無料体験は終了しました" description="プランを購入すると学習を再開できます。" />
+      ) : null}
+      {usage.kind === "none" ? (
+        <StateBox title="現在有効なプランはありません" description="プランを購入すると学習を開始できます。" />
+      ) : null}
     </section>
   )
 }
 
-function StateBox({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
+function Heading() {
   return (
-    <div
-      style={{
-        border: "1px solid rgba(0,0,0,0.08)",
-        borderRadius: 14,
-        background: "white",
-        padding: 14,
-      }}
-    >
+    <div>
+      <div style={{ fontWeight: 900, fontSize: 18 }}>現在のご利用状況</div>
+      <div style={{ marginTop: 4, fontSize: 13, color: "#64748b" }}>契約内容と実際の利用期限を確認できます</div>
+    </div>
+  )
+}
+
+function PeriodSection({ title, period }: { title: string; period: PeriodView }) {
+  return (
+    <div style={sectionStyle}>
       <div style={{ fontWeight: 900 }}>{title}</div>
-      <div style={{ marginTop: 6, fontSize: 13, opacity: 0.75, lineHeight: 1.7 }}>
-        {description}
+      {period.active ? (
+        <>
+          <div style={{ marginTop: 10, fontSize: 30, lineHeight: 1.2, fontWeight: 900 }}>
+            残り{period.remainingDays}日
+          </div>
+          {period.expiringSoon ? (
+            <div style={warningStyle}>まもなく期限です</div>
+          ) : null}
+          <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.7 }}>
+            <b>利用期限：</b>{formatDateJP(period.end)}（日本時間）
+          </div>
+        </>
+      ) : (
+        <div style={{ marginTop: 8, fontWeight: 800 }}>期限切れ、または利用期限を確認できません</div>
+      )}
+    </div>
+  )
+}
+
+function TrialSection({ period }: { period: PeriodView }) {
+  const remaining = period.remainingHours < 24
+    ? `残り${period.remainingHours}時間`
+    : `残り${period.remainingDays}日`
+  return (
+    <div style={sectionStyle}>
+      <div style={{ fontWeight: 900 }}>無料体験中</div>
+      <div style={{ marginTop: 10, fontSize: 30, lineHeight: 1.2, fontWeight: 900 }}>{remaining}</div>
+      <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.7 }}>
+        <b>体験終了日時：</b>{formatDateJP(period.end)}（日本時間）
       </div>
     </div>
   )
 }
 
-function InfoBox({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
+function StateBox({ title, description }: { title: string; description: string }) {
   return (
-    <div
-      style={{
-        border: "1px solid rgba(0,0,0,0.08)",
-        borderRadius: 14,
-        background: "white",
-        padding: 14,
-      }}
-    >
-      <div style={{ fontSize: 13, opacity: 0.7 }}>{label}</div>
-      <div style={{ marginTop: 6, fontWeight: 900, fontSize: 20 }}>{value}</div>
+    <div style={sectionStyle}>
+      <div style={{ fontWeight: 900, fontSize: 17 }}>{title}</div>
+      <div style={{ marginTop: 7, fontSize: 14, color: "#475569", lineHeight: 1.7 }}>{description}</div>
     </div>
   )
+}
+
+const cardStyle: React.CSSProperties = {
+  border: "1px solid rgba(15,23,42,.10)", borderRadius: 20, background: "white", padding: 18,
+}
+const sectionStyle: React.CSSProperties = {
+  marginTop: 14, border: "1px solid rgba(15,23,42,.10)", borderRadius: 16, background: "#f8fafc", padding: 15,
+}
+const warningStyle: React.CSSProperties = {
+  display: "inline-block", marginTop: 8, borderRadius: 999, padding: "6px 10px",
+  background: "#fff7ed", color: "#9a3412", border: "1px solid #fed7aa", fontSize: 13, fontWeight: 900,
+}
+const renewalStyle: React.CSSProperties = {
+  marginTop: 10, fontSize: 14, color: "#334155",
+}
+const linkStyle: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", border: "1px solid rgba(0,0,0,.12)", borderRadius: 12,
+  padding: "10px 14px", fontSize: 13, fontWeight: 900, textDecoration: "none", color: "#111", background: "white",
 }
