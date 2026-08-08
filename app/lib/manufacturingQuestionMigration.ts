@@ -3,6 +3,7 @@ import { quizzes } from '../data/quizzes'
 
 const VERSION_KEY = 'manufacturing-question-migration-v1'
 const VERSION_KEY_V2 = 'manufacturing-question-migration-v2'
+const VERSION_KEY_V3 = 'manufacturing-static-audio-migration-v3'
 const MANUFACTURING_QUIZ_TYPES = ['manufacturing-meaning','manufacturing-word','manufacturing-conversation','manufacturing-conversation-50','skill-test-machining'] as const
 type ManufacturingQuizType = (typeof MANUFACTURING_QUIZ_TYPES)[number]
 const STORAGE_KEYS = MANUFACTURING_QUIZ_TYPES.flatMap((quizType) => [`wrong-${quizType}`,`normal-session-${quizType}`,...(quizType === 'skill-test-machining' ? [`exam-session-${quizType}`] : [])])
@@ -12,6 +13,18 @@ export const MANUFACTURING_MIGRATION_V2_TARGETS = [{"quizType":"manufacturing-me
 export const MANUFACTURING_MIGRATION_V2_TARGET_COUNT = MANUFACTURING_MIGRATION_V2_TARGETS.length
 const V2_QUIZ_TYPES = ['manufacturing-meaning','manufacturing-word','manufacturing-conversation-50'] as const
 const V2_STORAGE_KEYS = V2_QUIZ_TYPES.flatMap((quizType) => [`wrong-${quizType}`,`normal-session-${quizType}`,`exam-session-${quizType}`])
+const AUDIO_QUIZ_TYPES = ['speaking-practice','genba-listening','genba-phrasebook'] as const
+type AudioQuizType = (typeof AUDIO_QUIZ_TYPES)[number]
+const AUDIO_STORAGE_KEYS = AUDIO_QUIZ_TYPES.flatMap((quizType) => [`wrong-${quizType}`,`normal-session-${quizType}`,`exam-session-${quizType}`])
+export const MANUFACTURING_STATIC_AUDIO_TARGETS = [
+  { quizType: 'speaking-practice', id: 1, audioUrl: '/audio/manufacturing/speaking/speaking-practice-1.mp3' },
+  { quizType: 'genba-listening', id: 1, audioUrl: '/audio/manufacturing/genba/genba-listening-1.mp3' },
+  { quizType: 'genba-listening', id: 2, audioUrl: '/audio/manufacturing/genba/genba-listening-2.mp3' },
+  { quizType: 'genba-listening', id: 3, audioUrl: '/audio/manufacturing/genba/genba-listening-3.mp3' },
+  { quizType: 'genba-listening', id: 4, audioUrl: '/audio/manufacturing/genba/genba-listening-4.mp3' },
+  { quizType: 'genba-phrasebook', id: 1, audioUrl: '/audio/manufacturing/genba/genba-phrasebook-1.mp3' },
+  { quizType: 'genba-phrasebook', id: 5, audioUrl: '/audio/manufacturing/genba/genba-phrasebook-5.mp3' },
+] as const
 const canonical = new Map<string, Question>()
 for (const quizType of MANUFACTURING_QUIZ_TYPES) for (const question of quizzes[quizType].questions) canonical.set(`${quizType}:${question.id}`, question)
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
@@ -24,7 +37,11 @@ function migrateArray(values: unknown[], quizType: ManufacturingQuizType, target
 function migrateStoredValue(value: unknown, quizType: string, targets: readonly MigrationTarget[]): unknown { if(!MANUFACTURING_QUIZ_TYPES.includes(quizType as ManufacturingQuizType))return value; const typed=quizType as ManufacturingQuizType; if(Array.isArray(value))return migrateArray(value,typed,targets); if(!value||typeof value!=='object')return value; const record={...(value as Record<string,unknown>)}; if(Array.isArray(record.questions))record.questions=migrateArray(record.questions,typed,targets); return record }
 export function migrateManufacturingStoredValue(value: unknown, quizType: string): unknown { return migrateStoredValue(value,quizType,MANUFACTURING_MIGRATION_TARGETS) }
 export function migrateManufacturingStoredValueV2(value: unknown, quizType: string): unknown { return migrateStoredValue(value,quizType,MANUFACTURING_MIGRATION_V2_TARGETS) }
+function sameChoices(a: unknown, b: unknown): boolean { if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return false;return JSON.stringify(a.map(String).sort())===JSON.stringify(b.map(String).sort()) }
+function matchesAudioLegacyQuestion(value: unknown, quizType: AudioQuizType, id: number): value is Question { if(!value||typeof value!=='object')return false;const q=value as Partial<Question>;const current=quizzes[quizType].questions.find((candidate)=>Number(candidate.id)===id);const currentCorrectIndex=current?.correctIndex;if(!current||Number(q.id)!==id||q.audioUrl||typeof currentCorrectIndex!=='number')return false;const correctIndex=q.correctIndex;const answer=Array.isArray(q.choices)&&typeof correctIndex==='number'?q.choices[correctIndex]:undefined;const currentAnswer=current.choices[currentCorrectIndex];return q.question===current.question&&q.explanation===current.explanation&&q.listeningText===current.listeningText&&q.sectionId===current.sectionId&&sameChoices(q.choices,current.choices)&&answer===currentAnswer }
+function migrateAudioQuestion(value: unknown, quizType: AudioQuizType): unknown { const target=MANUFACTURING_STATIC_AUDIO_TARGETS.find((item)=>item.quizType===quizType&&matchesAudioLegacyQuestion(value,quizType,item.id));return target&&value&&typeof value==='object'?{...(value as Record<string,unknown>),audioUrl:target.audioUrl}:value }
+export function migrateManufacturingStaticAudioStoredValue(value: unknown, quizType: string): unknown { if(!AUDIO_QUIZ_TYPES.includes(quizType as AudioQuizType))return value;const typed=quizType as AudioQuizType;if(Array.isArray(value))return value.map((item)=>migrateAudioQuestion(item,typed));if(!value||typeof value!=='object')return value;const record={...(value as Record<string,unknown>)};if(Array.isArray(record.questions))record.questions=record.questions.map((item)=>migrateAudioQuestion(item,typed));return record }
 function runStorageMigration(storage: StorageLike, versionKey: string, storageKeys: readonly string[], migrate: (value: unknown, quizType: string) => unknown): void { try{if(storage.getItem(versionKey)==='1')return}catch{return} for(const key of storageKeys){try{const raw=storage.getItem(key);if(!raw)continue;const quizType=key.replace(/^(wrong|normal-session|exam-session)-/,'');const parsed=JSON.parse(raw);const migrated=migrate(parsed,quizType);if(!same(parsed,migrated))storage.setItem(key,JSON.stringify(migrated))}catch{}} try{storage.setItem(versionKey,'1')}catch{} }
-export function migrateManufacturingQuestionStorage(storage?: StorageLike): void { if(!storage){if(typeof window==='undefined')return;storage=window.localStorage} runStorageMigration(storage,VERSION_KEY,STORAGE_KEYS,migrateManufacturingStoredValue);runStorageMigration(storage,VERSION_KEY_V2,V2_STORAGE_KEYS,migrateManufacturingStoredValueV2) }
+export function migrateManufacturingQuestionStorage(storage?: StorageLike): void { if(!storage){if(typeof window==='undefined')return;storage=window.localStorage} runStorageMigration(storage,VERSION_KEY,STORAGE_KEYS,migrateManufacturingStoredValue);runStorageMigration(storage,VERSION_KEY_V2,V2_STORAGE_KEYS,migrateManufacturingStoredValueV2);runStorageMigration(storage,VERSION_KEY_V3,AUDIO_STORAGE_KEYS,migrateManufacturingStaticAudioStoredValue) }
 function hashText(text: string): string { let hash=2166136261;for(let i=0;i<text.length;i++){hash^=text.charCodeAt(i);hash=Math.imul(hash,16777619)}return(hash>>>0).toString(16).padStart(8,'0') }
 export function buildManufacturingQuizContentSignature(quizType: QuizType, questions: readonly Question[]): string|undefined { if(!MANUFACTURING_QUIZ_TYPES.includes(quizType as ManufacturingQuizType))return undefined;const content=questions.map(q=>JSON.stringify([q.id,q.question,q.choices,q.correctIndex,q.sectionId])).join('|');return `manufacturing:v1:${quizType}:${questions.length}:${hashText(content)}` }

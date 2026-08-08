@@ -1,7 +1,20 @@
 import type { Question, Quiz, QuizType } from "@/app/data/types"
 
+const MANUFACTURING_STATIC_AUDIO_URLS = new Map<string, string>([
+  ["speaking-practice:1", "/audio/manufacturing/speaking/speaking-practice-1.mp3"],
+  ["genba-listening:1", "/audio/manufacturing/genba/genba-listening-1.mp3"],
+  ["genba-listening:2", "/audio/manufacturing/genba/genba-listening-2.mp3"],
+  ["genba-listening:3", "/audio/manufacturing/genba/genba-listening-3.mp3"],
+  ["genba-listening:4", "/audio/manufacturing/genba/genba-listening-4.mp3"],
+  ["genba-phrasebook:1", "/audio/manufacturing/genba/genba-phrasebook-1.mp3"],
+  ["genba-phrasebook:5", "/audio/manufacturing/genba/genba-phrasebook-5.mp3"],
+])
+
 function getAudioUrl(quizType: QuizType, question: Question): string | undefined {
   if (!question.listeningText?.trim()) return undefined
+
+  const manufacturingStaticAudioUrl = MANUFACTURING_STATIC_AUDIO_URLS.get(`${quizType}:${question.id}`)
+  if (manufacturingStaticAudioUrl) return manufacturingStaticAudioUrl
 
   switch (quizType) {
     case "japanese-n4":
