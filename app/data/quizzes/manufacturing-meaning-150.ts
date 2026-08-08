@@ -756,9 +756,9 @@ export const manufacturingMeaningQuiz: Quiz = {
       id: 84,
       sectionId: "all",
       question: "「保護具」に一番近い意味はどれですか？",
-      choices: ["作業中に体を守る道具のまとめた呼び方です", "機械を守るカバー", "製品を守る箱", "道具をしまう箱"],
+      choices: ["作業中に体を守る道具をまとめた呼び方です", "機械を守るカバー", "製品を守る箱", "道具をしまう箱"],
       correctIndex: 0,
-      explanation: "「保護具」とは、作業中に体を守る道具のまとめた呼び方です",
+      explanation: "「保護具」とは、作業中に体を守る道具をまとめた呼び方です。機械や製品を守る物ではなく、作業者の身体を危険から守るための物です。",
       explanationEn: "Correct answer: 保護具. This term means: 作業中に体を守る道具のまとめた呼び方です.",
     },
     {
@@ -963,9 +963,9 @@ export const manufacturingMeaningQuiz: Quiz = {
       id: 107,
       sectionId: "all",
       question: "「危険区域」に一番近い意味はどれですか？",
-      choices: ["危険で立ち入ってはいけない場所です", "作業をする場所", "休憩をする場所", "道具をしまう場所"],
+      choices: ["危険があるため、立入りや作業が管理・制限されている区域です", "作業をする場所", "休憩をする場所", "道具をしまう場所"],
       correctIndex: 0,
-      explanation: "「危険区域」とは、危険で立ち入ってはいけない場所です",
+      explanation: "「危険区域」とは、危険があるため、立入りや作業が管理・制限されている区域です。常に全面立入禁止とは限らず、表示や事業場の手順に従います。",
       explanationEn: "Correct answer: 危険区域. This term means: 危険で立ち入ってはいけない場所です.",
     },
     {
@@ -1223,10 +1223,10 @@ export const manufacturingMeaningQuiz: Quiz = {
     {
       id: 136,
       sectionId: "all",
-      question: "「安全帯」に一番近い意味はどれですか？",
-      choices: ["高いところで作業するとき体をつなぎ止めるベルトです", "手を守る手袋", "目を守るメガネ", "足を守る靴"],
+      question: "「墜落制止用器具」に一番近い意味はどれですか？",
+      choices: ["高所作業で墜落を防ぐため、身体を支持物などに接続する保護具です", "手を守る手袋", "目を守るメガネ", "足を守る靴"],
       correctIndex: 0,
-      explanation: "「安全帯」とは、高いところで作業するとき体をつなぎ止めるベルトです",
+      explanation: "正解は「高所作業で墜落を防ぐため、身体を支持物などに接続する保護具」です。法令上の現行名称は「墜落制止用器具」で、従来「安全帯」と呼ばれたものを含みます。",
       explanationEn: "Correct answer: 安全帯. This term means: 高いところで作業するとき体をつなぎ止めるベルトです.",
     },
     {

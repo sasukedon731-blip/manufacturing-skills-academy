@@ -755,10 +755,10 @@ export const manufacturingConversation: Quiz = {
     {
       id: 84,
       sectionId: "all",
-      question: "A: 「○○」を必ずつけてください。ヘルメット・手袋・安全靴などをまとめた呼び方です。 B: その言葉は何ですか？",
+      question: "A: 「○○」を必ずつけてください。ヘルメット・手袋・安全靴など、作業中に体を守る物をまとめた呼び方です。 B: その言葉は何ですか？",
       choices: ["保護具", "安全靴", "保護メガネ", "作業服"],
       correctIndex: 0,
-      explanation: "会話の中の「○○」は「保護具」です。作業中に体を守る道具のまとめた呼び方です",
+      explanation: "会話の中の「○○」は「保護具」です。作業中に体を守る物をまとめた呼び方です。安全靴や保護メガネは個別の保護具です。",
       explanationEn: "Correct answer: 保護具. In this conversation, the missing word is 保護具. It means: 作業中に体を守る道具のまとめた呼び方です.",
     },
     {
@@ -962,10 +962,10 @@ export const manufacturingConversation: Quiz = {
     {
       id: 107,
       sectionId: "all",
-      question: "A: 「○○」に入らないでください。重大な危険があり、立入りが禁止された区域のことです。 B: その言葉は何ですか？",
+      question: "A: 「○○」では、表示や作業手順に従ってください。危険があるため、立入りや作業が管理・制限されている区域です。 B: その言葉は何ですか？",
       choices: ["危険区域", "立入禁止", "作業区域", "通路"],
       correctIndex: 0,
-      explanation: "会話の中の「○○」は「危険区域」です。危険で立ち入ってはいけない場所です",
+      explanation: "会話の中の「○○」は「危険区域」です。危険があるため、立入りや作業が管理・制限されている区域を指します。「立入禁止」は区域名ではなく、立入りを禁止する規制・表示です。",
       explanationEn: "Correct answer: 危険区域. In this conversation, the missing word is 危険区域. It means: 危険で立ち入ってはいけない場所です.",
     },
     {
@@ -1223,10 +1223,10 @@ export const manufacturingConversation: Quiz = {
     {
       id: 136,
       sectionId: "all",
-      question: "A: 「○○」を必ずつけてください。高所作業で墜落を防ぐための命綱・ハーネスのことです。 B: その言葉は何ですか？",
-      choices: ["安全帯", "保護具", "安全靴", "保護手袋"],
+      question: "A: 高所作業では「○○」を正しく使用してください。墜落を防ぐため、身体を支持物などに接続する保護具です。 B: その言葉は何ですか？",
+      choices: ["墜落制止用器具", "保護メガネ", "安全靴", "保護手袋"],
       correctIndex: 0,
-      explanation: "会話の中の「○○」は「安全帯」です。高いところで作業するとき体をつなぎ止めるベルトです",
+      explanation: "会話の中の「○○」は「墜落制止用器具」です。高所作業で墜落を防ぐため、身体を支持物などに接続する保護具で、従来「安全帯」と呼ばれたものを含みます。",
       explanationEn: "Correct answer: 安全帯. In this conversation, the missing word is 安全帯. It means: 高いところで作業するとき体をつなぎ止めるベルトです.",
     },
     {

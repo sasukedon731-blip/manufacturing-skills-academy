@@ -8,7 +8,7 @@ import { collection, getDocs, limit, orderBy, query } from "firebase/firestore"
 import styles from "./gameKind.module.css"
 import { db } from "@/app/lib/firebase"
 import { useAuth } from "@/app/lib/useAuth"
-import type { QuizType } from "@/app/data/types"
+import { GAME_QUIZ_TYPES, isGameQuizType, type GameQuizType } from "../gameQuizTypes"
 
 type Kind = "tile-drop" | "flash-judge" | "memory-burst"
 type Mode = "normal" | "attack"
@@ -29,15 +29,6 @@ function toKind(v: unknown): Kind {
   if (k === "flashjudge") return "flash-judge"
   if (k === "memoryburst") return "memory-burst"
   return "tile-drop"
-}
-
-function isQuizType(v: any): v is QuizType {
-  return (
-    v === "japanese-n4" ||
-    v === "japanese-n3" ||
-    v === "japanese-n2" ||
-    v === "genba-listening"
-  )
 }
 
 function kindMeta(kind: Kind) {
@@ -81,25 +72,26 @@ export default function GameKindClient() {
   const rawType = searchParams.get("type")
   const rawMode = searchParams.get("mode")
   const quick = searchParams.get("quick") === "1"
+  const hasExplicitQuizType = rawType !== null
+  const invalidQuizType = hasExplicitQuizType && !isGameQuizType(rawType)
 
   // 状態
-  const [quizType, setQuizType] = useState<QuizType>(() => (isQuizType(rawType) ? rawType : "japanese-n4"))
+  const [quizType, setQuizType] = useState<GameQuizType>(() => (isGameQuizType(rawType) ? rawType : "japanese-n4"))
   const [mode, setMode] = useState<Mode>(() => (rawMode === "attack" ? "attack" : "normal"))
   const [toast, setToast] = useState("")
 
   // クエリ変化で同期（直リンク/戻る進む）
   useEffect(() => {
-    if (isQuizType(rawType)) setQuizType(rawType)
+    if (isGameQuizType(rawType)) setQuizType(rawType)
     setMode(rawMode === "attack" ? "attack" : "normal")
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawType, rawMode])
 
   // ✅ quick=1 は即開始（URL書き換えは事故るからやらない）
   useEffect(() => {
-    if (!quick) return
+    if (!quick || invalidQuizType) return
     goPlay(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quick])
+  }, [quick, invalidQuizType])
 
   // ランキング
   const [lb, setLb] = useState<{ displayName: string; bestScore: number }[]>([])
@@ -107,6 +99,7 @@ export default function GameKindClient() {
   useEffect(() => {
     let cancelled = false
     async function run() {
+      if (invalidQuizType) return
       try {
         const col = collection(db, "attackLeaderboards", safeKind, "entries")
         const q = query(col, orderBy("bestScore", "desc"), limit(10))
@@ -127,9 +120,10 @@ export default function GameKindClient() {
     return () => {
       cancelled = true
     }
-  }, [safeKind])
+  }, [safeKind, invalidQuizType])
 
   function goPlay(isQuick?: boolean) {
+    if (invalidQuizType) return
     // kindが消える事故に備えて保存
     try {
       sessionStorage.setItem("lastGameKind", safeKind)
@@ -162,6 +156,20 @@ export default function GameKindClient() {
     }
 
     router.push(`/game/play?${qs.toString()}`)
+  }
+
+  if (invalidQuizType) {
+    return (
+      <main className={styles.wrap}>
+        <div className={styles.topRow}>
+          <Link href="/game" className={styles.back}>← ゲームTOP</Link>
+        </div>
+        <section className={styles.card}>
+          <div className={styles.title}>この教材はゲーム対象外です</div>
+          <div className={styles.help}>ゲームではN4・N3・N2だけを選択できます。</div>
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -234,7 +242,7 @@ export default function GameKindClient() {
         <div style={{ marginTop: 12 }}>
           <div className={styles.label}>レベル</div>
           <div className={styles.seg}>
-            {(["japanese-n4", "japanese-n3", "japanese-n2"] as QuizType[]).map((lv) => (
+            {GAME_QUIZ_TYPES.map((lv) => (
               <button
                 key={lv}
                 type="button"

@@ -8,6 +8,7 @@ import QuestionImage from '@/app/components/QuestionImage'
 import type { Question, Quiz, QuizType } from '@/app/data/types'
 import { migrateN3QuestionStorage } from '@/app/lib/n3QuestionMigration'
 import { migrateN2QuestionStorage } from '@/app/lib/n2QuestionMigration'
+import { migrateManufacturingQuestionStorage } from '@/app/lib/manufacturingQuestionMigration'
 import { formatCorrectAnswerLabels, getCorrectIndexes, isCorrectSelection, isMultiAnswerQuestion, isSelectionComplete, requiredAnswerCount, stripLeadingAnswerLabel } from '@/app/lib/questionAnswer'
 import { canSpeak, speak, stopSpeak } from '@/app/lib/tts'
 import { useAuth } from '@/app/lib/useAuth'
@@ -41,7 +42,7 @@ export default function ReviewClient({ quiz }: Props) {
   const quizType: QuizType = quiz.id
   const storageKey = `${STORAGE_WRONG_KEY}-${quizType}`
 
-  useEffect(() => { migrateN3QuestionStorage(); migrateN2QuestionStorage() }, [quizType])
+  useEffect(() => { migrateN3QuestionStorage(); migrateN2QuestionStorage(); migrateManufacturingQuestionStorage() }, [quizType])
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [index, setIndex] = useState(0)

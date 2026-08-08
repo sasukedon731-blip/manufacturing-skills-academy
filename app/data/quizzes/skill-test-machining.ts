@@ -15,12 +15,12 @@ export const skillTestMachiningQuiz: Quiz = {
     { id:7, sectionId:"safety", question:"10cmは1000mmである。", choices:["〇","×"], correctIndex:1, explanation:"10cm=100mm。" },
     { id:8, sectionId:"safety", question:"鋼は焼き入れすると硬くなる。", choices:["〇","×"], correctIndex:0, explanation:"焼入れで硬度が上がる。" },
     { id:9, sectionId:"safety", question:"ヒヤリハットは事故後の報告である。", choices:["〇","×"], correctIndex:1, explanation:"事故にならなかった危険事例。" },
-    { id:10, sectionId:"safety", question:"電気火災には水をかける。", choices:["〇","×"], correctIndex:1, explanation:"感電危険。適切な消火器を使用。" },
+    { id:10, sectionId:"safety", question:"通電中の電気設備の火災に、水を無条件にかけてよい。", choices:["〇","×"], correctIndex:1, explanation:"正解は「×」です。通電中の電気設備への放水は感電のおそれがあります。安全に電源を遮断し、火災区分に適合する消火器を使用して消防へ連絡します。" },
     { id:11, sectionId:"safety", question:"通路に荷物を置くのは危険である。", choices:["〇","×"], correctIndex:0, explanation:"転倒や避難の妨げになる。" },
-    { id:12, sectionId:"safety", question:"油のついたウエスはふた付き金属容器へ捨てる。", choices:["〇","×"], correctIndex:0, explanation:"自然発火防止。" },
-    { id:13, sectionId:"safety", question:"回転部分に手袋で触れてはいけない。", choices:["〇","×"], correctIndex:0, explanation:"巻き込み事故防止。" },
-    { id:14, sectionId:"safety", question:"労働安全衛生法は働く人の安全を守る法律。", choices:["〇","×"], correctIndex:0, explanation:"安全と健康の確保。" },
-    { id:15, sectionId:"safety", question:"騒音の大きい場所では耳栓を使用する。", choices:["〇","×"], correctIndex:0, explanation:"聴覚保護。" },
+    { id:12, sectionId:"safety", question:"自然発火のおそれがある油が染みたウエスは、事業場の手順に従い、ふた付きの指定容器に入れる。", choices:["〇","×"], correctIndex:0, explanation:"正解は「〇」です。油が染みたウエスは蓄熱して発火することがあるため、油の性質と事業場の手順に従い、ふた付きの指定容器で安全に保管・処理します。" },
+    { id:13, sectionId:"safety", question:"回転部分に手袋で触れてはいけない。", choices:["〇","×"], correctIndex:0, explanation:"正解は「〇」です。回転中の部分には手を触れてはいけません。手袋は回転部へ巻き込まれる危険を高めるため、機械と作業手順で定めた方法に従います。" },
+    { id:14, sectionId:"safety", question:"労働安全衛生法は働く人の安全を守る法律。", choices:["〇","×"], correctIndex:0, explanation:"正解は「〇」です。労働安全衛生法は、労働者の安全と健康を確保し、快適な職場環境の形成を促進することを目的としています。" },
+    { id:15, sectionId:"safety", question:"騒音リスクの評価で聴覚保護具が必要とされた場所では、適切な耳栓またはイヤーマフを正しく使用する。", choices:["〇","×"], correctIndex:0, explanation:"正解は「〇」です。騒音はまず発生源対策などで低減し、それでも必要な場合は騒音特性と作業に適した聴覚保護具を正しく使用します。" },
 
     { id:16, sectionId:"machining", question:"切削速度は工具や材料に関係なく一定。", choices:["〇","×"], correctIndex:1, explanation:"材料や工具で変わる。" },
     { id:17, sectionId:"machining", question:"超硬工具は高速切削に適する。", choices:["〇","×"], correctIndex:0, explanation:"高速加工向き。" },
@@ -35,7 +35,7 @@ export const skillTestMachiningQuiz: Quiz = {
     { id:26, sectionId:"machining", question:"正面フライスは広い平面加工に適する。", choices:["〇","×"], correctIndex:0, explanation:"平面加工向き。" },
     { id:27, sectionId:"machining", question:"M03は主軸正転。", choices:["〇","×"], correctIndex:0, explanation:"NCコード。" },
     { id:28, sectionId:"machining", question:"G00は直線補間の切削送り。", choices:["〇","×"], correctIndex:1, explanation:"G01が切削送り。" },
-    { id:29, sectionId:"machining", question:"加工直後のワークは素手で触らない。", choices:["〇","×"], correctIndex:0, explanation:"高温の可能性。" },
+    { id:29, sectionId:"machining", question:"加工直後で高温または鋭利なワークは、作業手順に従い、工具や適切な保護具を使って扱う。", choices:["〇","×"], correctIndex:0, explanation:"正解は「〇」です。加工直後のワークには高温、ばり、鋭い角などの危険があります。状態を確認し、定められた工具・保護具・取扱手順を使います。" },
     { id:30, sectionId:"machining", question:"工具摩耗が進むと寸法誤差が出やすい。", choices:["〇","×"], correctIndex:0, explanation:"精度低下。" }
   ]
 }

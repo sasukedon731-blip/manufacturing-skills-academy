@@ -2,6 +2,7 @@
 import { quizzes } from "@/app/data/quizzes"
 import type { QuizType } from "@/app/data/types"
 import type { GameQuestion, GameDifficulty, GameKind } from "./types"
+import { isGameQuizType } from "./gameQuizTypes"
 
 export type GameGenOptions = {
   difficulty?: GameDifficulty
@@ -21,7 +22,10 @@ const DEFAULT_OPTS: Required<GameGenOptions> = {
   allowAutoTrimChoice: false,
 }
 
-export function buildGameQuestionsFromQuizzes(quizType: QuizType, opts?: GameGenOptions): GameQuestion[] {
+export function buildGameQuestionsFromQuizzes(quizType: unknown, opts?: GameGenOptions): GameQuestion[] {
+  if (!isGameQuizType(quizType)) {
+    throw new RangeError("Unsupported game quiz type")
+  }
   const merged = { ...DEFAULT_OPTS, ...(opts ?? {}) } as Required<GameGenOptions>
 
   // ✅ japanese-n4 はデフォ difficulty をN4寄せ（optsで指定があれば優先）

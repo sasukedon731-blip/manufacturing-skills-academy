@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-import type { QuizType } from "@/app/data/types"
-import { quizzes } from "@/app/data/quizzes"
 import TileDropGame from "./TileDropGame"
 import SpeedChoiceGame from "./SpeedChoiceGame"
 import FlashJudgeGame from "./FlashJudgeGame"
@@ -20,11 +18,7 @@ import { arrayUnion, doc, getDoc, setDoc } from "firebase/firestore"
 import { enqueueAchievementToasts } from "@/app/lib/achievementToastQueue"
 import { getBadgeMeta } from "@/app/lib/badges"
 import type { PlanId } from "@/app/lib/plan"
-
-function isQuizType(v: any): v is QuizType {
-  if (typeof v !== "string") return false
-  return v in quizzes
-}
+import { isGameQuizType, type GameQuizType } from "./gameQuizTypes"
 
 function isGameKind(v: any): v is GameKind {
   return (
@@ -134,8 +128,9 @@ export default function GameClient() {
   const rawMode = params.get("mode")
   const rawKind = params.get("kind")
 
-  const quizType: QuizType = useMemo(() => {
-    return isQuizType(rawType) ? rawType : "japanese-n4"
+  const quizType: GameQuizType | null = useMemo(() => {
+    if (rawType === null) return "japanese-n4"
+    return isGameQuizType(rawType) ? rawType : null
   }, [rawType])
 
   const modeParam = rawMode === "attack" ? "attack" : "normal"
@@ -148,25 +143,28 @@ export default function GameClient() {
   }, [rawKind])
 
   useEffect(() => {
+    if (!quizType) return
     try {
       sessionStorage.setItem("lastGameKind", kind)
     } catch {}
-  }, [kind])
+  }, [kind, quizType])
 
   const [guestOk, setGuestOk] = useState(true)
 
   useEffect(() => {
+    if (!quizType) return
     if (modeParam !== "normal") return
     if (user) return
     setGuestOk(canGuestPlayToday())
-  }, [modeParam, user])
+  }, [modeParam, user, quizType])
 
   useEffect(() => {
+    if (!quizType) return
     if (modeParam !== "normal") return
     if (user) return
     if (!guestOk) return
     markGuestPlayedToday()
-  }, [modeParam, user, guestOk])
+  }, [modeParam, user, guestOk, quizType])
 
   const [checkingUserLimit, setCheckingUserLimit] = useState(false)
   const [userOk, setUserOk] = useState(true)
@@ -175,6 +173,7 @@ export default function GameClient() {
     let cancelled = false
 
     async function run() {
+      if (!quizType) return
       if (!user) return
       setCheckingUserLimit(true)
 
@@ -208,9 +207,10 @@ export default function GameClient() {
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [user, quizType])
 
   useEffect(() => {
+    if (!quizType) return
     if (!user || checkingUserLimit || !userOk || awardOnceRef.current) return
     awardOnceRef.current = true
 
@@ -242,7 +242,21 @@ export default function GameClient() {
         console.error("game achievement award failed:", e)
       }
     })()
-  }, [user, checkingUserLimit, userOk, modeParam])
+  }, [user, checkingUserLimit, userOk, modeParam, quizType])
+
+  if (!quizType) {
+    return (
+      <main style={{ padding: 16, maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ border: "1px solid #eee", borderRadius: 14, padding: 16 }}>
+          <div style={{ fontWeight: 900, fontSize: 16 }}>この教材はゲーム対象外です</div>
+          <div style={{ marginTop: 8, opacity: 0.8 }}>ゲームではN4・N3・N2だけを選択できます。</div>
+          <button type="button" onClick={() => router.push("/game")} style={{ marginTop: 12 }}>
+            ゲームTOPへ戻る
+          </button>
+        </div>
+      </main>
+    )
+  }
 
   if (modeParam === "normal" && !user && !guestOk) {
     return <GuestBlocked onLogin={() => router.push("/login")} />

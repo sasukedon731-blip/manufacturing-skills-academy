@@ -14,7 +14,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "ヘルメットを着用する / wear a helmet",
       ],
       correctIndex: 3,
-      explanation: "【音声】ヘルメットをかぶってください\\n\\n現場の指示なので、「ヘルメットを着用する」が正解です。",
+      explanation: "【音声】ヘルメットをかぶってください\n\n現場の指示なので、「ヘルメットを着用する」が正解です。",
     },
     {
       id: 2,
@@ -27,7 +27,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】安全靴をはいてください\\n\\n現場の指示なので、「安全靴を着用する」が正解です。",
+      explanation: "【音声】安全靴をはいてください\n\n現場の指示なので、「安全靴を着用する」が正解です。",
     },
     {
       id: 3,
@@ -40,7 +40,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "保護メガネを着用する / wear safety goggles",
       ],
       correctIndex: 3,
-      explanation: "【音声】保護メガネをしてください\\n\\n現場の指示なので、「保護メガネを着用する」が正解です。",
+      explanation: "【音声】保護メガネをしてください\n\n現場の指示なので、「保護メガネを着用する」が正解です。",
     },
     {
       id: 4,
@@ -53,7 +53,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "保護手袋を着用する / wear gloves",
       ],
       correctIndex: 3,
-      explanation: "【音声】保護手袋をつけてください\\n\\n現場の指示なので、「保護手袋を着用する」が正解です。",
+      explanation: "【音声】保護手袋をつけてください\n\n現場の指示なので、「保護手袋を着用する」が正解です。",
     },
     {
       id: 5,
@@ -66,7 +66,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 1,
-      explanation: "【音声】機械を止めてください\\n\\n現場の指示なので、「機械を停止する」が正解です。",
+      explanation: "【音声】機械を止めてください\n\n現場の指示なので、「機械を停止する」が正解です。",
     },
     {
       id: 6,
@@ -79,7 +79,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 1,
-      explanation: "【音声】非常停止ボタンを押してください\\n\\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
+      explanation: "【音声】非常停止ボタンを押してください\n\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
     },
     {
       id: 7,
@@ -92,7 +92,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 2,
-      explanation: "【音声】ラインを止めてください\\n\\n現場の指示なので、「ラインを停止する」が正解です。",
+      explanation: "【音声】ラインを止めてください\n\n現場の指示なので、「ラインを停止する」が正解です。",
     },
     {
       id: 8,
@@ -105,7 +105,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】ラインを再開してください\\n\\n現場の指示なので、「ラインを再開する」が正解です。",
+      explanation: "【音声】ラインを再開してください\n\n現場の指示なので、「ラインを再開する」が正解です。",
     },
     {
       id: 9,
@@ -118,7 +118,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】段取りをしてください\\n\\n現場の指示なので、「作業の準備をする」が正解です。",
+      explanation: "【音声】段取りをしてください\n\n現場の指示なので、「作業の準備をする」が正解です。",
     },
     {
       id: 10,
@@ -131,7 +131,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "材料を運ぶ / move the materials",
       ],
       correctIndex: 3,
-      explanation: "【音声】材料を運んでください\\n\\n現場の指示なので、「材料を運ぶ」が正解です。",
+      explanation: "【音声】材料を運んでください\n\n現場の指示なので、「材料を運ぶ」が正解です。",
     },
     {
       id: 11,
@@ -144,7 +144,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "部品を指定の場所に置く / place the parts here",
       ],
       correctIndex: 3,
-      explanation: "【音声】部品をここに置いてください\\n\\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
+      explanation: "【音声】部品をここに置いてください\n\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
     },
     {
       id: 12,
@@ -157,7 +157,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 1,
-      explanation: "【音声】この製品を検査してください\\n\\n現場の指示なので、「製品を検査する」が正解です。",
+      explanation: "【音声】この製品を検査してください\n\n現場の指示なので、「製品を検査する」が正解です。",
     },
     {
       id: 13,
@@ -170,7 +170,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】不良品を分けてください\\n\\n現場の指示なので、「不良品を分ける」が正解です。",
+      explanation: "【音声】不良品を分けてください\n\n現場の指示なので、「不良品を分ける」が正解です。",
     },
     {
       id: 14,
@@ -183,7 +183,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "もう一度確認する / check again",
       ],
       correctIndex: 3,
-      explanation: "【音声】もう一度確認してください\\n\\n現場の指示なので、「もう一度確認する」が正解です。",
+      explanation: "【音声】もう一度確認してください\n\n現場の指示なので、「もう一度確認する」が正解です。",
     },
     {
       id: 15,
@@ -196,7 +196,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 0,
-      explanation: "【音声】班長に報告してください\\n\\n現場の指示なので、「班長に報告する」が正解です。",
+      explanation: "【音声】班長に報告してください\n\n現場の指示なので、「班長に報告する」が正解です。",
     },
     {
       id: 16,
@@ -209,7 +209,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "工具を持ってくる / bring the tools",
       ],
       correctIndex: 3,
-      explanation: "【音声】工具を持ってきてください\\n\\n現場の指示なので、「工具を持ってくる」が正解です。",
+      explanation: "【音声】工具を持ってきてください\n\n現場の指示なので、「工具を持ってくる」が正解です。",
     },
     {
       id: 17,
@@ -222,7 +222,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 1,
-      explanation: "【音声】掃除をしてください\\n\\n現場の指示なので、「作業場を掃除する」が正解です。",
+      explanation: "【音声】掃除をしてください\n\n現場の指示なので、「作業場を掃除する」が正解です。",
     },
     {
       id: 18,
@@ -235,7 +235,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 1,
-      explanation: "【音声】機械を点検してください\\n\\n現場の指示なので、「機械を点検する」が正解です。",
+      explanation: "【音声】機械を点検してください\n\n現場の指示なので、「機械を点検する」が正解です。",
     },
     {
       id: 19,
@@ -248,7 +248,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "危険なので近づかない / stay away for safety",
       ],
       correctIndex: 3,
-      explanation: "【音声】危ないので近づかないでください\\n\\n現場の指示なので、「危険なので近づかない」が正解です。",
+      explanation: "【音声】危ないので近づかないでください\n\n現場の指示なので、「危険なので近づかない」が正解です。",
     },
     {
       id: 20,
@@ -261,7 +261,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】ここは立入禁止です\\n\\n現場の指示なので、「ここに入らない」が正解です。",
+      explanation: "【音声】ここは立入禁止です\n\n現場の指示なので、「ここに入らない」が正解です。",
     },
     {
       id: 21,
@@ -274,7 +274,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】速やかに避難してください\\n\\n現場の指示なので、「安全な場所へ避難する」が正解です。",
+      explanation: "【音声】速やかに避難してください\n\n現場の指示なので、「安全な場所へ避難する」が正解です。",
     },
     {
       id: 22,
@@ -287,7 +287,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 0,
-      explanation: "【音声】この部品が足りません\\n\\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
+      explanation: "【音声】この部品が足りません\n\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
     },
     {
       id: 23,
@@ -300,7 +300,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "状況を報告して原因確認する / report and check cause",
       ],
       correctIndex: 3,
-      explanation: "【音声】機械が止まりました\\n\\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
+      explanation: "【音声】機械が止まりました\n\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
     },
     {
       id: 24,
@@ -313,7 +313,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】異常が出ました\\n\\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
+      explanation: "【音声】異常が出ました\n\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
     },
     {
       id: 25,
@@ -326,7 +326,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "異常音を報告して点検する / report abnormal sound",
       ],
       correctIndex: 3,
-      explanation: "【音声】音がいつもと違います\\n\\n現場の指示なので、「異常音を報告して点検する」が正解です。",
+      explanation: "【音声】音がいつもと違います\n\n現場の指示なので、「異常音を報告して点検する」が正解です。",
     },
     {
       id: 26,
@@ -339,7 +339,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "給油する / lubricate",
       ],
       correctIndex: 3,
-      explanation: "【音声】油を入れてください\\n\\n現場の指示なので、「給油する」が正解です。",
+      explanation: "【音声】油を入れてください\n\n現場の指示なので、「給油する」が正解です。",
     },
     {
       id: 27,
@@ -352,7 +352,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 1,
-      explanation: "【音声】締め付けを確認してください\\n\\n現場の指示なので、「締め付けを確認する」が正解です。",
+      explanation: "【音声】締め付けを確認してください\n\n現場の指示なので、「締め付けを確認する」が正解です。",
     },
     {
       id: 28,
@@ -365,7 +365,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 2,
-      explanation: "【音声】緩みがないか見てください\\n\\n現場の指示なので、「緩みを確認する」が正解です。",
+      explanation: "【音声】緩みがないか見てください\n\n現場の指示なので、「緩みを確認する」が正解です。",
     },
     {
       id: 29,
@@ -378,7 +378,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 0,
-      explanation: "【音声】作業を止めてください\\n\\n現場の指示なので、「作業を中断する」が正解です。",
+      explanation: "【音声】作業を止めてください\n\n現場の指示なので、「作業を中断する」が正解です。",
     },
     {
       id: 30,
@@ -391,7 +391,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "ゆっくり安全に運ぶ / carry slowly and safely",
       ],
       correctIndex: 3,
-      explanation: "【音声】ゆっくり運んでください\\n\\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
+      explanation: "【音声】ゆっくり運んでください\n\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
     },
     {
       id: 31,
@@ -404,7 +404,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "ヘルメットを着用する / wear a helmet",
       ],
       correctIndex: 3,
-      explanation: "【音声】ヘルメットをかぶってください\\n\\n現場の指示なので、「ヘルメットを着用する」が正解です。",
+      explanation: "【音声】ヘルメットをかぶってください\n\n現場の指示なので、「ヘルメットを着用する」が正解です。",
     },
     {
       id: 32,
@@ -417,7 +417,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】安全靴をはいてください\\n\\n現場の指示なので、「安全靴を着用する」が正解です。",
+      explanation: "【音声】安全靴をはいてください\n\n現場の指示なので、「安全靴を着用する」が正解です。",
     },
     {
       id: 33,
@@ -430,7 +430,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】保護メガネをしてください\\n\\n現場の指示なので、「保護メガネを着用する」が正解です。",
+      explanation: "【音声】保護メガネをしてください\n\n現場の指示なので、「保護メガネを着用する」が正解です。",
     },
     {
       id: 34,
@@ -443,7 +443,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】保護手袋をつけてください\\n\\n現場の指示なので、「保護手袋を着用する」が正解です。",
+      explanation: "【音声】保護手袋をつけてください\n\n現場の指示なので、「保護手袋を着用する」が正解です。",
     },
     {
       id: 35,
@@ -456,7 +456,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】機械を止めてください\\n\\n現場の指示なので、「機械を停止する」が正解です。",
+      explanation: "【音声】機械を止めてください\n\n現場の指示なので、「機械を停止する」が正解です。",
     },
     {
       id: 36,
@@ -469,7 +469,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 0,
-      explanation: "【音声】非常停止ボタンを押してください\\n\\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
+      explanation: "【音声】非常停止ボタンを押してください\n\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
     },
     {
       id: 37,
@@ -482,7 +482,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 1,
-      explanation: "【音声】ラインを止めてください\\n\\n現場の指示なので、「ラインを停止する」が正解です。",
+      explanation: "【音声】ラインを止めてください\n\n現場の指示なので、「ラインを停止する」が正解です。",
     },
     {
       id: 38,
@@ -495,7 +495,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 2,
-      explanation: "【音声】ラインを再開してください\\n\\n現場の指示なので、「ラインを再開する」が正解です。",
+      explanation: "【音声】ラインを再開してください\n\n現場の指示なので、「ラインを再開する」が正解です。",
     },
     {
       id: 39,
@@ -508,7 +508,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "作業の準備をする / prepare the work",
       ],
       correctIndex: 3,
-      explanation: "【音声】段取りをしてください\\n\\n現場の指示なので、「作業の準備をする」が正解です。",
+      explanation: "【音声】段取りをしてください\n\n現場の指示なので、「作業の準備をする」が正解です。",
     },
     {
       id: 40,
@@ -521,7 +521,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】材料を運んでください\\n\\n現場の指示なので、「材料を運ぶ」が正解です。",
+      explanation: "【音声】材料を運んでください\n\n現場の指示なので、「材料を運ぶ」が正解です。",
     },
     {
       id: 41,
@@ -534,7 +534,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "部品を指定の場所に置く / place the parts here",
       ],
       correctIndex: 3,
-      explanation: "【音声】部品をここに置いてください\\n\\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
+      explanation: "【音声】部品をここに置いてください\n\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
     },
     {
       id: 42,
@@ -547,7 +547,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】この製品を検査してください\\n\\n現場の指示なので、「製品を検査する」が正解です。",
+      explanation: "【音声】この製品を検査してください\n\n現場の指示なので、「製品を検査する」が正解です。",
     },
     {
       id: 43,
@@ -560,7 +560,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "不良品を分ける / separate defective items",
       ],
       correctIndex: 3,
-      explanation: "【音声】不良品を分けてください\\n\\n現場の指示なので、「不良品を分ける」が正解です。",
+      explanation: "【音声】不良品を分けてください\n\n現場の指示なので、「不良品を分ける」が正解です。",
     },
     {
       id: 44,
@@ -573,7 +573,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 0,
-      explanation: "【音声】もう一度確認してください\\n\\n現場の指示なので、「もう一度確認する」が正解です。",
+      explanation: "【音声】もう一度確認してください\n\n現場の指示なので、「もう一度確認する」が正解です。",
     },
     {
       id: 45,
@@ -586,7 +586,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】班長に報告してください\\n\\n現場の指示なので、「班長に報告する」が正解です。",
+      explanation: "【音声】班長に報告してください\n\n現場の指示なので、「班長に報告する」が正解です。",
     },
     {
       id: 46,
@@ -599,7 +599,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 0,
-      explanation: "【音声】工具を持ってきてください\\n\\n現場の指示なので、「工具を持ってくる」が正解です。",
+      explanation: "【音声】工具を持ってきてください\n\n現場の指示なので、「工具を持ってくる」が正解です。",
     },
     {
       id: 47,
@@ -612,7 +612,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】掃除をしてください\\n\\n現場の指示なので、「作業場を掃除する」が正解です。",
+      explanation: "【音声】掃除をしてください\n\n現場の指示なので、「作業場を掃除する」が正解です。",
     },
     {
       id: 48,
@@ -625,7 +625,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 0,
-      explanation: "【音声】機械を点検してください\\n\\n現場の指示なので、「機械を点検する」が正解です。",
+      explanation: "【音声】機械を点検してください\n\n現場の指示なので、「機械を点検する」が正解です。",
     },
     {
       id: 49,
@@ -638,7 +638,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "危険なので近づかない / stay away for safety",
       ],
       correctIndex: 3,
-      explanation: "【音声】危ないので近づかないでください\\n\\n現場の指示なので、「危険なので近づかない」が正解です。",
+      explanation: "【音声】危ないので近づかないでください\n\n現場の指示なので、「危険なので近づかない」が正解です。",
     },
     {
       id: 50,
@@ -651,7 +651,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "ここに入らない / do not enter",
       ],
       correctIndex: 3,
-      explanation: "【音声】ここは立入禁止です\\n\\n現場の指示なので、「ここに入らない」が正解です。",
+      explanation: "【音声】ここは立入禁止です\n\n現場の指示なので、「ここに入らない」が正解です。",
     },
     {
       id: 51,
@@ -664,7 +664,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】速やかに避難してください\\n\\n現場の指示なので、「安全な場所へ避難する」が正解です。",
+      explanation: "【音声】速やかに避難してください\n\n現場の指示なので、「安全な場所へ避難する」が正解です。",
     },
     {
       id: 52,
@@ -677,7 +677,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】この部品が足りません\\n\\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
+      explanation: "【音声】この部品が足りません\n\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
     },
     {
       id: 53,
@@ -690,7 +690,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 1,
-      explanation: "【音声】機械が止まりました\\n\\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
+      explanation: "【音声】機械が止まりました\n\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
     },
     {
       id: 54,
@@ -703,7 +703,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 0,
-      explanation: "【音声】異常が出ました\\n\\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
+      explanation: "【音声】異常が出ました\n\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
     },
     {
       id: 55,
@@ -716,7 +716,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "異常音を報告して点検する / report abnormal sound",
       ],
       correctIndex: 3,
-      explanation: "【音声】音がいつもと違います\\n\\n現場の指示なので、「異常音を報告して点検する」が正解です。",
+      explanation: "【音声】音がいつもと違います\n\n現場の指示なので、「異常音を報告して点検する」が正解です。",
     },
     {
       id: 56,
@@ -729,7 +729,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "給油する / lubricate",
       ],
       correctIndex: 3,
-      explanation: "【音声】油を入れてください\\n\\n現場の指示なので、「給油する」が正解です。",
+      explanation: "【音声】油を入れてください\n\n現場の指示なので、「給油する」が正解です。",
     },
     {
       id: 57,
@@ -742,7 +742,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "締め付けを確認する / check tightening",
       ],
       correctIndex: 3,
-      explanation: "【音声】締め付けを確認してください\\n\\n現場の指示なので、「締め付けを確認する」が正解です。",
+      explanation: "【音声】締め付けを確認してください\n\n現場の指示なので、「締め付けを確認する」が正解です。",
     },
     {
       id: 58,
@@ -755,7 +755,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】緩みがないか見てください\\n\\n現場の指示なので、「緩みを確認する」が正解です。",
+      explanation: "【音声】緩みがないか見てください\n\n現場の指示なので、「緩みを確認する」が正解です。",
     },
     {
       id: 59,
@@ -768,7 +768,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "作業を中断する / stop working",
       ],
       correctIndex: 3,
-      explanation: "【音声】作業を止めてください\\n\\n現場の指示なので、「作業を中断する」が正解です。",
+      explanation: "【音声】作業を止めてください\n\n現場の指示なので、「作業を中断する」が正解です。",
     },
     {
       id: 60,
@@ -781,7 +781,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 1,
-      explanation: "【音声】ゆっくり運んでください\\n\\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
+      explanation: "【音声】ゆっくり運んでください\n\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
     },
     {
       id: 61,
@@ -794,7 +794,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】ヘルメットをかぶってください\\n\\n現場の指示なので、「ヘルメットを着用する」が正解です。",
+      explanation: "【音声】ヘルメットをかぶってください\n\n現場の指示なので、「ヘルメットを着用する」が正解です。",
     },
     {
       id: 62,
@@ -807,7 +807,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】安全靴をはいてください\\n\\n現場の指示なので、「安全靴を着用する」が正解です。",
+      explanation: "【音声】安全靴をはいてください\n\n現場の指示なので、「安全靴を着用する」が正解です。",
     },
     {
       id: 63,
@@ -820,7 +820,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】保護メガネをしてください\\n\\n現場の指示なので、「保護メガネを着用する」が正解です。",
+      explanation: "【音声】保護メガネをしてください\n\n現場の指示なので、「保護メガネを着用する」が正解です。",
     },
     {
       id: 64,
@@ -833,7 +833,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "保護手袋を着用する / wear gloves",
       ],
       correctIndex: 3,
-      explanation: "【音声】保護手袋をつけてください\\n\\n現場の指示なので、「保護手袋を着用する」が正解です。",
+      explanation: "【音声】保護手袋をつけてください\n\n現場の指示なので、「保護手袋を着用する」が正解です。",
     },
     {
       id: 65,
@@ -846,7 +846,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "機械を停止する / stop the machine",
       ],
       correctIndex: 3,
-      explanation: "【音声】機械を止めてください\\n\\n現場の指示なので、「機械を停止する」が正解です。",
+      explanation: "【音声】機械を止めてください\n\n現場の指示なので、「機械を停止する」が正解です。",
     },
     {
       id: 66,
@@ -859,7 +859,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "非常停止ボタンを押す / press emergency stop",
       ],
       correctIndex: 3,
-      explanation: "【音声】非常停止ボタンを押してください\\n\\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
+      explanation: "【音声】非常停止ボタンを押してください\n\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
     },
     {
       id: 67,
@@ -872,7 +872,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 1,
-      explanation: "【音声】ラインを止めてください\\n\\n現場の指示なので、「ラインを停止する」が正解です。",
+      explanation: "【音声】ラインを止めてください\n\n現場の指示なので、「ラインを停止する」が正解です。",
     },
     {
       id: 68,
@@ -885,7 +885,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 1,
-      explanation: "【音声】ラインを再開してください\\n\\n現場の指示なので、「ラインを再開する」が正解です。",
+      explanation: "【音声】ラインを再開してください\n\n現場の指示なので、「ラインを再開する」が正解です。",
     },
     {
       id: 69,
@@ -898,7 +898,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 0,
-      explanation: "【音声】段取りをしてください\\n\\n現場の指示なので、「作業の準備をする」が正解です。",
+      explanation: "【音声】段取りをしてください\n\n現場の指示なので、「作業の準備をする」が正解です。",
     },
     {
       id: 70,
@@ -911,7 +911,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "材料を運ぶ / move the materials",
       ],
       correctIndex: 3,
-      explanation: "【音声】材料を運んでください\\n\\n現場の指示なので、「材料を運ぶ」が正解です。",
+      explanation: "【音声】材料を運んでください\n\n現場の指示なので、「材料を運ぶ」が正解です。",
     },
     {
       id: 71,
@@ -924,7 +924,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】部品をここに置いてください\\n\\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
+      explanation: "【音声】部品をここに置いてください\n\n現場の指示なので、「部品を指定の場所に置く」が正解です。",
     },
     {
       id: 72,
@@ -937,7 +937,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 2,
-      explanation: "【音声】この製品を検査してください\\n\\n現場の指示なので、「製品を検査する」が正解です。",
+      explanation: "【音声】この製品を検査してください\n\n現場の指示なので、「製品を検査する」が正解です。",
     },
     {
       id: 73,
@@ -950,7 +950,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 2,
-      explanation: "【音声】不良品を分けてください\\n\\n現場の指示なので、「不良品を分ける」が正解です。",
+      explanation: "【音声】不良品を分けてください\n\n現場の指示なので、「不良品を分ける」が正解です。",
     },
     {
       id: 74,
@@ -963,7 +963,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "もう一度確認する / check again",
       ],
       correctIndex: 3,
-      explanation: "【音声】もう一度確認してください\\n\\n現場の指示なので、「もう一度確認する」が正解です。",
+      explanation: "【音声】もう一度確認してください\n\n現場の指示なので、「もう一度確認する」が正解です。",
     },
     {
       id: 75,
@@ -976,7 +976,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 2,
-      explanation: "【音声】班長に報告してください\\n\\n現場の指示なので、「班長に報告する」が正解です。",
+      explanation: "【音声】班長に報告してください\n\n現場の指示なので、「班長に報告する」が正解です。",
     },
     {
       id: 76,
@@ -989,7 +989,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】工具を持ってきてください\\n\\n現場の指示なので、「工具を持ってくる」が正解です。",
+      explanation: "【音声】工具を持ってきてください\n\n現場の指示なので、「工具を持ってくる」が正解です。",
     },
     {
       id: 77,
@@ -1002,7 +1002,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 1,
-      explanation: "【音声】掃除をしてください\\n\\n現場の指示なので、「作業場を掃除する」が正解です。",
+      explanation: "【音声】掃除をしてください\n\n現場の指示なので、「作業場を掃除する」が正解です。",
     },
     {
       id: 78,
@@ -1015,7 +1015,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 1,
-      explanation: "【音声】機械を点検してください\\n\\n現場の指示なので、「機械を点検する」が正解です。",
+      explanation: "【音声】機械を点検してください\n\n現場の指示なので、「機械を点検する」が正解です。",
     },
     {
       id: 79,
@@ -1028,7 +1028,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 0,
-      explanation: "【音声】危ないので近づかないでください\\n\\n現場の指示なので、「危険なので近づかない」が正解です。",
+      explanation: "【音声】危ないので近づかないでください\n\n現場の指示なので、「危険なので近づかない」が正解です。",
     },
     {
       id: 80,
@@ -1041,7 +1041,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 1,
-      explanation: "【音声】ここは立入禁止です\\n\\n現場の指示なので、「ここに入らない」が正解です。",
+      explanation: "【音声】ここは立入禁止です\n\n現場の指示なので、「ここに入らない」が正解です。",
     },
     {
       id: 81,
@@ -1054,7 +1054,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 2,
-      explanation: "【音声】速やかに避難してください\\n\\n現場の指示なので、「安全な場所へ避難する」が正解です。",
+      explanation: "【音声】速やかに避難してください\n\n現場の指示なので、「安全な場所へ避難する」が正解です。",
     },
     {
       id: 82,
@@ -1067,7 +1067,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】この部品が足りません\\n\\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
+      explanation: "【音声】この部品が足りません\n\n現場の指示なので、「部品不足を報告して補充する」が正解です。",
     },
     {
       id: 83,
@@ -1080,7 +1080,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 1,
-      explanation: "【音声】機械が止まりました\\n\\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
+      explanation: "【音声】機械が止まりました\n\n現場の指示なので、「状況を報告して原因確認する」が正解です。",
     },
     {
       id: 84,
@@ -1093,7 +1093,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "何もしない / do nothing",
       ],
       correctIndex: 2,
-      explanation: "【音声】異常が出ました\\n\\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
+      explanation: "【音声】異常が出ました\n\n現場の指示なので、「異常を報告して停止・確認する」が正解です。",
     },
     {
       id: 85,
@@ -1106,7 +1106,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 1,
-      explanation: "【音声】音がいつもと違います\\n\\n現場の指示なので、「異常音を報告して点検する」が正解です。",
+      explanation: "【音声】音がいつもと違います\n\n現場の指示なので、「異常音を報告して点検する」が正解です。",
     },
     {
       id: 86,
@@ -1119,7 +1119,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "給油する / lubricate",
       ],
       correctIndex: 3,
-      explanation: "【音声】油を入れてください\\n\\n現場の指示なので、「給油する」が正解です。",
+      explanation: "【音声】油を入れてください\n\n現場の指示なので、「給油する」が正解です。",
     },
     {
       id: 87,
@@ -1132,7 +1132,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 2,
-      explanation: "【音声】締め付けを確認してください\\n\\n現場の指示なので、「締め付けを確認する」が正解です。",
+      explanation: "【音声】締め付けを確認してください\n\n現場の指示なので、「締め付けを確認する」が正解です。",
     },
     {
       id: 88,
@@ -1145,7 +1145,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 1,
-      explanation: "【音声】緩みがないか見てください\\n\\n現場の指示なので、「緩みを確認する」が正解です。",
+      explanation: "【音声】緩みがないか見てください\n\n現場の指示なので、「緩みを確認する」が正解です。",
     },
     {
       id: 89,
@@ -1158,7 +1158,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】作業を止めてください\\n\\n現場の指示なので、「作業を中断する」が正解です。",
+      explanation: "【音声】作業を止めてください\n\n現場の指示なので、「作業を中断する」が正解です。",
     },
     {
       id: 90,
@@ -1171,7 +1171,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "勝手に続ける / keep going without reporting",
       ],
       correctIndex: 0,
-      explanation: "【音声】ゆっくり運んでください\\n\\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
+      explanation: "【音声】ゆっくり運んでください\n\n現場の指示なので、「ゆっくり安全に運ぶ」が正解です。",
     },
     {
       id: 91,
@@ -1184,7 +1184,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 0,
-      explanation: "【音声】ヘルメットをかぶってください\\n\\n現場の指示なので、「ヘルメットを着用する」が正解です。",
+      explanation: "【音声】ヘルメットをかぶってください\n\n現場の指示なので、「ヘルメットを着用する」が正解です。",
     },
     {
       id: 92,
@@ -1197,7 +1197,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 1,
-      explanation: "【音声】安全靴をはいてください\\n\\n現場の指示なので、「安全靴を着用する」が正解です。",
+      explanation: "【音声】安全靴をはいてください\n\n現場の指示なので、「安全靴を着用する」が正解です。",
     },
     {
       id: 93,
@@ -1210,7 +1210,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "保護メガネを着用する / wear safety goggles",
       ],
       correctIndex: 3,
-      explanation: "【音声】保護メガネをしてください\\n\\n現場の指示なので、「保護メガネを着用する」が正解です。",
+      explanation: "【音声】保護メガネをしてください\n\n現場の指示なので、「保護メガネを着用する」が正解です。",
     },
     {
       id: 94,
@@ -1223,7 +1223,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "保護手袋を着用する / wear gloves",
       ],
       correctIndex: 3,
-      explanation: "【音声】保護手袋をつけてください\\n\\n現場の指示なので、「保護手袋を着用する」が正解です。",
+      explanation: "【音声】保護手袋をつけてください\n\n現場の指示なので、「保護手袋を着用する」が正解です。",
     },
     {
       id: 95,
@@ -1236,7 +1236,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 2,
-      explanation: "【音声】機械を止めてください\\n\\n現場の指示なので、「機械を停止する」が正解です。",
+      explanation: "【音声】機械を止めてください\n\n現場の指示なので、「機械を停止する」が正解です。",
     },
     {
       id: 96,
@@ -1249,7 +1249,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "休憩する / take a break",
       ],
       correctIndex: 0,
-      explanation: "【音声】非常停止ボタンを押してください\\n\\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
+      explanation: "【音声】非常停止ボタンを押してください\n\n現場の指示なので、「非常停止ボタンを押す」が正解です。",
     },
     {
       id: 97,
@@ -1262,7 +1262,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "ラインを停止する / stop the line",
       ],
       correctIndex: 3,
-      explanation: "【音声】ラインを止めてください\\n\\n現場の指示なので、「ラインを停止する」が正解です。",
+      explanation: "【音声】ラインを止めてください\n\n現場の指示なので、「ラインを停止する」が正解です。",
     },
     {
       id: 98,
@@ -1275,7 +1275,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "帰る / go home",
       ],
       correctIndex: 0,
-      explanation: "【音声】ラインを再開してください\\n\\n現場の指示なので、「ラインを再開する」が正解です。",
+      explanation: "【音声】ラインを再開してください\n\n現場の指示なので、「ラインを再開する」が正解です。",
     },
     {
       id: 99,
@@ -1288,7 +1288,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "急いで作業する / work faster",
       ],
       correctIndex: 2,
-      explanation: "【音声】段取りをしてください\\n\\n現場の指示なので、「作業の準備をする」が正解です。",
+      explanation: "【音声】段取りをしてください\n\n現場の指示なので、「作業の準備をする」が正解です。",
     },
     {
       id: 100,
@@ -1301,7 +1301,7 @@ export const manufacturingConversationQuiz: Quiz = {
         "材料を運ぶ / move the materials",
       ],
       correctIndex: 3,
-      explanation: "【音声】材料を運んでください\\n\\n現場の指示なので、「材料を運ぶ」が正解です。",
+      explanation: "【音声】材料を運んでください\n\n現場の指示なので、「材料を運ぶ」が正解です。",
     },
   ],
 }
